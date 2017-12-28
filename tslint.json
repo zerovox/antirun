@@ -1,0 +1,29 @@
+{
+  "extends": [
+    "tslint:latest",
+    "tslint-react",
+    "tslint-config-prettier",
+    "tslint-plugin-prettier"
+  ],
+  "defaultSeverity": "error",
+  "rules": {
+    "no-default-export": true,
+    "prettier": {
+      "options": [{
+        "trailingComma": "all",
+        "printWidth": 100
+      }]
+    },
+    "interface-name": false,
+    "object-literal-sort-keys": false,
+    "max-classes-per-file": false,
+    "variable-name": {
+      "options": [
+        "allow-leading-underscore",
+        "allow-pascal-case",
+        "ban-keywords",
+        "check-format"
+      ]
+    }
+  }
+}

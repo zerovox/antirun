@@ -1,0 +1,83 @@
+body {
+    background: var(--base00);
+    color: var(--base06);
+    font-family: monospace;
+}
+
+.turbo {
+    display: flex;
+    flex-direction: row;
+}
+
+.game,
+.chat {
+    margin: 10px;
+}
+
+.chat {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat > .chat-history {
+    flex: 1 1 auto;
+}
+
+.chat > .chat-input {
+    flex: 0 0 auto;
+}
+
+.trick-table {
+    border-collapse: collapse;
+}
+
+.trick-table .play:empty {
+    border: 0;
+}
+
+.trick-table .play,
+.players-row .player {
+    border: 1px solid var(--base01);
+    padding: 3px;
+    width: 23px;
+    text-align: center;
+}
+
+.trick-row.-trick-n-1 .play:empty {
+    background: transparent;
+    border: 0;
+}
+
+.trick-row.-trick-n-1 .play {
+    background: var(--base01);
+    border: 1px solid var(--base02);
+}
+
+.trick-row.-trick-n-2 .play:empty {
+    background: transparent;
+}
+
+.trick-row.-trick-n-2 .play {
+    background: var(--base02);
+    border: 1px solid var(--base03);
+}
+
+.card-hand {
+    margin-top: 10px;
+}
+
+.-clubs {
+    color: var(--base0B);
+}
+
+.-diamonds {
+    color: var(--base0C);
+}
+
+.-hearts {
+    color: var(--base0F);
+}
+
+.-spades {
+    color: var(--base07);
+}

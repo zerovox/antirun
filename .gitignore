@@ -1,0 +1,11 @@
+.idea/
+.vscode/
+.DS_Store
+build/
+node_modules/
+config-schema.json
+npm-debug.log
+lib/
+_book
+.cache/
+dist/
