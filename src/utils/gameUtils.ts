@@ -1,6 +1,7 @@
-import { ALL_CARDS, Card, RankString, Suit, Trick } from "../types";
+import { Card, RankString, Suit, Trick } from "../types";
 import { makeObject } from "./makeObject";
 import { strToRank } from "./rankUtils";
+import { ALL_CARDS } from "../state/cards";
 
 export function isRank(card: Card, rankString: RankString) {
   return card.rank === strToRank(rankString);

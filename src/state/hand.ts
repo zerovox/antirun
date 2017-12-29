@@ -1,6 +1,6 @@
 import { AutomataBuilder } from "../automata/AutomataBuilder";
 import { TransitionTo } from "../automata/types";
-import { ALL_CARDS, Card, PassDirection, PlayerMap, Trick } from "../types";
+import { Card, PassDirection, PlayerMap, Trick } from "../types";
 import { scoreHand } from "../utils/gameUtils";
 import { makeObject } from "../utils/makeObject";
 import { segment } from "../utils/segment";
@@ -8,6 +8,7 @@ import { shuffle } from "../utils/shuffle";
 import { ChargeActions, ChargeAutomata, ChargeData } from "./charge";
 import { PassActions, PassAutomata, PassData } from "./pass";
 import { PlayActions, PlayAutomata, PlayData } from "./play";
+import { ALL_CARDS } from "./cards";
 
 export enum HandStates {
   Pass = "Pass",
