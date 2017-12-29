@@ -1,9 +1,12 @@
-import { StateMachineBuilder } from "../tsm/StateMachineBuilder";
+import { AutomataBuilder } from "../tsm/AutomataBuilder";
+import { ALL_CARDS, Card, PassDirection, PlayerMap, Trick } from "../types";
+import { scoreHand } from "../utils/gameUtils";
 import { makeObject } from "../utils/makeObject";
 import { segment } from "../utils/segment";
 import { shuffle } from "../utils/shuffle";
-import { ALL_CARDS, Card, PassDirection, PlayerMap } from "../types";
+import { ChargeMachine } from "./charge";
 import { createPassMachine } from "./pass";
+import { PlayMachine } from "./play";
 
 export enum HandStates {
   Pass = "Pass",
@@ -11,26 +14,24 @@ export enum HandStates {
   Play = "Play",
 }
 
-export interface HandState {
+export interface HandData {
   hands: PlayerMap<Card[]>;
   chargedCards: PlayerMap<Card[]>;
-  tricks: Card[][];
+  tricks: Trick[];
 }
-
-export interface HandScore {}
 
 export function createHandMachine(opts: {
   passDirection: PassDirection;
   players: string[];
-  onFinish: (score: HandScore) => void;
+  onFinish: (score: PlayerMap<number>) => void;
 }) {
   const allHands = segment(shuffle(ALL_CARDS), 13);
-  return new StateMachineBuilder<HandState>({
+  return new AutomataBuilder<HandData>({
     hands: makeObject(opts.players, (_playerName, index) => allHands[index]),
     tricks: [],
     chargedCards: {},
   })
-    .withSubmachine(HandStates.Pass, (state, emit) =>
+    .withNestedAutomata(HandStates.Pass, (state, emit) =>
       createPassMachine({
         passDirection: opts.passDirection,
         players: opts.players,
@@ -38,19 +39,24 @@ export function createHandMachine(opts: {
         onFinish: (finalHands: PlayerMap<Card[]>) => emit(HandStates.Charge, { hands: finalHands }),
       }),
     )
-    .withSubmachine(HandStates.Charge, (state, emit) =>
-      createChargeMachine({
+    .withNestedAutomata(HandStates.Charge, (state, emit) =>
+      ChargeMachine.create({
         hands: state.hands,
+        players: opts.players,
         onFinish: (chargedCards: PlayerMap<Card[]>) => emit(HandStates.Play, { chargedCards }),
       }),
     )
-    .withSubmachine(HandStates.Play, (state, emit) =>
-      createPlayMachine({
+    .withNestedAutomata(HandStates.Play, state =>
+      PlayMachine.create({
         hands: state.hands,
-        chargedCards: state.chargedCards,
-        // TODO : score
-        onFinish: (_tricks: PlayerMap<Card[]>) => opts.onFinish({}),
+        chargedCards: combine(state.chargedCards),
+        onFinish: (tricks: Trick[]) =>
+          opts.onFinish(scoreHand(tricks, combine(state.chargedCards), opts.players)),
       }),
     )
     .initialize(opts.passDirection === PassDirection.None ? HandStates.Charge : HandStates.Pass);
+}
+
+function combine<T>(obj: { [key: string]: T[] }) {
+  return Object.keys(obj).reduce((ts, key) => ts.concat(obj[key]), [] as T[]);
 }

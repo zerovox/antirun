@@ -1,5 +1,5 @@
-import { StateMachine, StateMachineState } from "../tsm/StateMachine";
-import { StateMachineBuilder } from "../tsm/StateMachineBuilder";
+import { Automata, AutomataState } from "../tsm/Automata";
+import { AutomataBuilder } from "../tsm/AutomataBuilder";
 import { makeObject } from "../utils/makeObject";
 
 export enum WaitForReadyStates {
@@ -22,16 +22,16 @@ export function createWaitForReadyMachine(opts: {
   players: string[];
   onLeave: (player: string) => void;
   onAllReady: () => void;
-}): StateMachine<StateMachineState<WaitForReadyState, {}, WaitForReadyActions>> {
+}): Automata<AutomataState<WaitForReadyState, {}, WaitForReadyActions>> {
   const readyMap = makeObject(opts.players, () => false);
-  return new StateMachineBuilder(readyMap)
-    .withMachine(WaitForReadyStates.Waiting, {
+  return new AutomataBuilder(readyMap)
+    .withState(WaitForReadyStates.Waiting, {
       transitions: {
         [WaitForReadyStates.Ready]: (state: WaitForReadyState) =>
           opts.players.every(player => state[player]),
       },
     })
-    .withMachine(WaitForReadyStates.Ready, {
+    .withState(WaitForReadyStates.Ready, {
       onEnter: () => opts.onAllReady(),
     })
     .actions<WaitForReadyActions>({

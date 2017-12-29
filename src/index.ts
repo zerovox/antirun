@@ -1,8 +1,8 @@
-import { PassDirection } from "./types";
 import { createHandMachine } from "./state/hand";
 import { WaitForPlayersMachine } from "./state/waitForPlayers";
 import { createWaitForReadyMachine } from "./state/waitForReady";
-import { StateMachineBuilder } from "./tsm/StateMachineBuilder";
+import { AutomataBuilder } from "./tsm/AutomataBuilder";
+import { PassDirection, PlayerMap } from "./types";
 import { shuffle } from "./utils/shuffle";
 
 export enum GameStates {
@@ -12,25 +12,25 @@ export enum GameStates {
   PassRight = "PassRight",
   PassAcross = "PassAcross",
   NoPass = "NoPass",
-  Scores = "Scores",
+  Done = "Scores",
 }
 
 export interface GameState {
   players: string[];
-  scores: number[][];
+  scores: Array<PlayerMap<number>>;
 }
 
-(window as any).sm = new StateMachineBuilder<GameState>({
+(window as any).sm = new AutomataBuilder<GameState>({
   players: [],
   scores: [],
 })
-  .withSubmachine(GameStates.WaitingForPlayers, (state, emit) =>
+  .withNestedAutomata(GameStates.WaitingForPlayers, (state, emit) =>
     WaitForPlayersMachine.create({
       players: state.players,
       onFull: players => emit(GameStates.WaitingForReady, { players }),
     }),
   )
-  .withSubmachine(GameStates.WaitingForReady, (state, emit) =>
+  .withNestedAutomata(GameStates.WaitingForReady, (state, emit) =>
     createWaitForReadyMachine({
       players: state.players,
       onLeave: player =>
@@ -40,38 +40,38 @@ export interface GameState {
       onAllReady: () => emit(GameStates.PassLeft, { players: shuffle(state.players) }),
     }),
   )
-  .withSubmachine(GameStates.PassLeft, (state, emit) =>
+  .withNestedAutomata(GameStates.PassLeft, (state, emit) =>
     createHandMachine({
-    players: state.players,
+      players: state.players,
       passDirection: PassDirection.Left,
-      onFinish: (score: number[]) =>
+      onFinish: (score: PlayerMap<number>) =>
         emit(GameStates.PassRight, { scores: state.scores.concat([score]) }),
     }),
   )
-  .withSubmachine(GameStates.PassRight, (state, emit) =>
+  .withNestedAutomata(GameStates.PassRight, (state, emit) =>
     createHandMachine({
-        players: state.players,
+      players: state.players,
       passDirection: PassDirection.Right,
-      onFinish: (score: number[]) =>
+      onFinish: (score: PlayerMap<number>) =>
         emit(GameStates.PassAcross, { scores: state.scores.concat([score]) }),
     }),
   )
-  .withSubmachine(GameStates.PassAcross, (state, emit) =>
+  .withNestedAutomata(GameStates.PassAcross, (state, emit) =>
     createHandMachine({
-        players: state.players,
+      players: state.players,
       passDirection: PassDirection.Across,
-      onFinish: (score: number[]) =>
+      onFinish: (score: PlayerMap<number>) =>
         emit(GameStates.NoPass, { scores: state.scores.concat([score]) }),
     }),
   )
-  .withSubmachine(GameStates.NoPass, (state, emit) =>
+  .withNestedAutomata(GameStates.NoPass, (state, emit) =>
     createHandMachine({
-        players: state.players,
+      players: state.players,
       passDirection: PassDirection.None,
-      onFinish: (score: number[]) =>
-        emit(GameStates.Scores, { scores: state.scores.concat([score]) }),
+      onFinish: (score: PlayerMap<number>) =>
+        emit(GameStates.Done, { scores: state.scores.concat([score]) }),
     }),
   )
-  .withMachine(GameStates.Scores)
+  .withState(GameStates.Done)
   .initialize(GameStates.WaitingForPlayers)
   .subscribe(state => console.log(state));

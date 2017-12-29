@@ -1,4 +1,4 @@
-import { StateMachineBuilder } from "../tsm/StateMachineBuilder";
+import { AutomataBuilder } from "../tsm/AutomataBuilder";
 import { Card, PassDirection, PlayerMap } from "../types";
 
 export enum PassStates {
@@ -11,7 +11,7 @@ export interface Pass {
   three: Card;
 }
 
-export interface PassState {
+export interface PassData {
   pass: PlayerMap<Pass>;
 }
 
@@ -25,15 +25,15 @@ export function createPassMachine(opts: {
   players: string[];
   onFinish: (finalHands: PlayerMap<Card[]>) => void;
 }) {
-  return new StateMachineBuilder<PassState>({
+  return new AutomataBuilder<PassData>({
     pass: {},
   })
-    .withMachine(PassStates.Passing, {
+    .withState(PassStates.Passing, {
       transitions: {
         [PassStates.Done]: state => Object.keys(state.pass).length === 4,
       },
     })
-    .withMachine(PassStates.Done, {
+    .withState(PassStates.Done, {
       onEnter: state =>
         opts.onFinish(applyPasses(opts.hands, state.pass, opts.players, opts.passDirection)),
     })
