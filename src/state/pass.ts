@@ -19,28 +19,32 @@ export interface PassActions {
   pass: (playerName: string, pass: Pass) => void;
 }
 
-export function createPassMachine(opts: {
+export interface PassAutomataOpts{
   passDirection: PassDirection;
   hands: PlayerMap<Card[]>;
   players: string[];
   onFinish: (finalHands: PlayerMap<Card[]>) => void;
-}) {
-  return new AutomataBuilder<PassData>({
-    pass: {},
-  })
-    .withState(PassStates.Passing, {
-      transitions: {
-        [PassStates.Done]: state => Object.keys(state.pass).length === 4,
-      },
-    })
-    .withState(PassStates.Done, {
-      onEnter: state =>
-        opts.onFinish(applyPasses(opts.hands, state.pass, opts.players, opts.passDirection)),
-    })
-    .actions<PassActions>({
-      pass: (playerName: string, pass: Pass) => ({ [playerName]: pass }),
-    })
-    .initialize(PassStates.Passing);
+}
+
+export const PassAutomata = {
+  create(opts: PassAutomataOpts) {
+      return new AutomataBuilder<PassData>({
+          pass: {},
+      })
+          .withState(PassStates.Passing, {
+              transitions: {
+                  [PassStates.Done]: data => Object.keys(data.pass).length === 4,
+              },
+          })
+          .withState(PassStates.Done, {
+              onEnter: data =>
+                  opts.onFinish(applyPasses(opts.hands, data.pass, opts.players, opts.passDirection)),
+          })
+          .actions<PassActions>({
+              pass: (playerName: string, pass: Pass) => ({ [playerName]: pass }),
+          })
+          .initialize(PassStates.Passing);
+  }
 }
 
 function applyPasses(

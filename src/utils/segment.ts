@@ -1,9 +1,11 @@
 export function segment<T>(ts: T[], count: number): T[][] {
   const output: T[][] = [];
-  const last = count;
+  let last = 0;
 
-  do {
+  while (last < ts.length) {
+    last += count;
     output.push(ts.slice(last - count, last));
-  } while (last < ts.length);
+  }
+  
   return output;
 }

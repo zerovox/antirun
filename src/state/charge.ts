@@ -17,14 +17,14 @@ export interface ChargeActions {
   pass(player: string): void;
 }
 
-export interface ChargeMachineOpts {
+export interface ChargeAutomataOpts {
   hands: PlayerMap<Card[]>;
   players: string[];
   onFinish: (chargedCards: PlayerMap<Card[]>) => void;
 }
 
-export const ChargeMachine = {
-  create(opts: ChargeMachineOpts) {
+export const ChargeAutomata = {
+  create(opts: ChargeAutomataOpts) {
     return new AutomataBuilder<ChargeData>({
       charges: makeObject(opts.players, () => []),
       passes: makeObject(opts.players, () => false),

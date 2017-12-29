@@ -1,1 +1,1 @@
-export type Emitter<S> = (stateName: string, state?: Partial<S>) => void;
+export type TransitionTo<S> = (stateName: string, state?: Partial<S>) => void;

@@ -1,12 +1,13 @@
 import { makeObject } from "../utils/makeObject";
 import { Automata, AutomataCreator, AutomataState, AutomataSubscription } from "./Automata";
 import { StateLifecycle, StateLifecycleCallback } from "./AutomataLifecycle";
-import { Emitter } from "./Emitter";
+import { TransitionTo } from "./Emitter";
 
 interface CreatedState<D> {
   name: string;
   state: Automata<AutomataState<{}, {}, {}>> | undefined;
   lifecycle: StateLifecycle<D>;
+  destroy: () => void;
 }
 
 interface StateCreator<D, C extends AutomataState<{}, {}, {}>> {
@@ -17,7 +18,7 @@ interface StateCreator<D, C extends AutomataState<{}, {}, {}>> {
 type DataUpdater<D> = undefined | Partial<D> | ((state: D) => Partial<D> | undefined);
 type ActionCreator<O, S> = (args: O) => DataUpdater<S>;
 
-export class AutomataBuilder<D extends {} = {}, C = never, A extends {} = {}> {
+export class AutomataBuilder<D extends {} = {}, C = {}, A extends {} = {}> {
   private stateCreator: {
     [name: string]: StateCreator<D, AutomataState<{}, {}, {}>>;
   } = {};
@@ -74,15 +75,15 @@ export class AutomataBuilder<D extends {} = {}, C = never, A extends {} = {}> {
   }
 
   public initialize(stateName: string): Automata<AutomataState<D, C, A>> {
-    const stateMachine = new AutomataImpl<any, C, A>(
+    const stateAutomata = new AutomataImpl<any, C, A>(
       this.initialData,
       this.stateCreator,
       this.actionCreators,
     );
 
-    stateMachine.transitionToState(stateName);
+    stateAutomata.transitionToState(stateName);
 
-    return stateMachine;
+    return stateAutomata;
   }
 }
 
@@ -107,7 +108,9 @@ class AutomataImpl<D extends { state: string; frame: {} }, T, A extends {}>
       if (!update) {
         return;
       }
-      this.setData(data);
+      if (this.setData(update)) {
+        return;
+      }
       this.update();
     }) as any;
   }
@@ -118,8 +121,8 @@ class AutomataImpl<D extends { state: string; frame: {} }, T, A extends {}>
       : (undefined as any);
 
     return {
+      ...(this.data as any),
       state: this.currentState ? this.currentState.name : (undefined! as string),
-      data: this.data,
       frame,
       actions: this.actions,
     } as any;
@@ -150,23 +153,26 @@ class AutomataImpl<D extends { state: string; frame: {} }, T, A extends {}>
   }
 
   private createState(stateName: string): CreatedState<{}> {
-    // TODO : maybe null?
     const stateCreator = this.stateCreators[stateName];
+    if (!stateCreator) {
+      throw new Error(`No State with name ${stateName} found`);
+    }
     const lifecycle = stateCreator.lifecycle(this.data);
 
     return {
       name: stateName,
       lifecycle,
       state: stateCreator.automataCreator
-        ? this.makeMachine(stateCreator.automataCreator)
+        ? this.makeAutomata(stateCreator.automataCreator)
         : undefined,
     };
   }
 
-  private makeMachine(creator: AutomataCreator<D, AutomataState<{}, {}, {}>>) {
-    const machine = creator(this.data, this.emitter);
-    machine.subscribe(() => this.update());
-    return machine;
+  private makeAutomata(creator: AutomataCreator<D, AutomataState<{}, {}, {}>>) {
+    const automata = creator(this.data, this.transitionTo);
+    // TODO : unsubscribe from this on autoamta destroy.
+    automata.subscribe(() => this.update());
+    return automata;
   }
 
   private update() {
@@ -176,13 +182,24 @@ class AutomataImpl<D extends { state: string; frame: {} }, T, A extends {}>
 
   private setData(update: Partial<D>) {
     this.data = { ...(this.data as any), ...(update as any) };
-    // TODO: check transitions. fire update if no transition. return true if update fired.
+    const transitions = this.currentState ? this.currentState.lifecycle.transitions : undefined;
+    if (transitions) {
+      const nextStateName = Object.keys(transitions)
+          .find(stateName => transitions[stateName](this.data));
+      if (nextStateName) {
+        return this.transitionToState(nextStateName);
+      }
+    }
+    return false;
   }
 
-  private emitter: Emitter<D> = (stateName: string, state: Partial<D>) => {
-    this.setData(state);
-    if (!this.transitionToState(stateName)) {
-      this.update();
+  private transitionTo: TransitionTo<D> = (stateName: string, state: Partial<D>) => {
+    if (this.setData(state)) {
+      return;
     }
+    if (this.transitionToState(stateName)) {
+      return;
+    }
+    this.update();
   };
 }

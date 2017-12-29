@@ -13,31 +13,36 @@ export interface WaitForReadyActions {
   leave: (playerName: string) => void;
 }
 
-export interface WaitForReadyState {
+export interface WaitForReadyData {
   [name: string]: boolean;
 }
 
-// TODO : can we abstract these one-step machines
-export function createWaitForReadyMachine(opts: {
+export interface WaitForReadyOpts {
   players: string[];
   onLeave: (player: string) => void;
   onAllReady: () => void;
-}): Automata<AutomataState<WaitForReadyState, {}, WaitForReadyActions>> {
-  const readyMap = makeObject(opts.players, () => false);
-  return new AutomataBuilder(readyMap)
-    .withState(WaitForReadyStates.Waiting, {
-      transitions: {
-        [WaitForReadyStates.Ready]: (state: WaitForReadyState) =>
-          opts.players.every(player => state[player]),
-      },
-    })
-    .withState(WaitForReadyStates.Ready, {
-      onEnter: () => opts.onAllReady(),
-    })
-    .actions<WaitForReadyActions>({
-      ready: (playerName: string) => ({ [playerName]: true }),
-      unready: (playerName: string) => ({ [playerName]: false }),
-      leave: (playerName: string) => opts.onLeave(playerName),
-    })
-    .initialize(WaitForReadyStates.Waiting);
 }
+
+// TODO : can we abstract these one-step automatas
+export const WaitForReadyAutomata = {
+  create(opts: WaitForReadyOpts) {
+    const readyMap = makeObject(opts.players, () => false);
+
+    return new AutomataBuilder(readyMap)
+      .withState(WaitForReadyStates.Waiting, {
+        transitions: {
+          [WaitForReadyStates.Ready]: (state: WaitForReadyData) =>
+            opts.players.every(player => state[player]),
+        },
+      })
+      .withState(WaitForReadyStates.Ready, {
+        onEnter: () => opts.onAllReady(),
+      })
+      .actions<WaitForReadyActions>({
+        ready: (playerName: string) => ({ [playerName]: true }),
+        unready: (playerName: string) => ({ [playerName]: false }),
+        leave: (playerName: string) => opts.onLeave(playerName),
+      })
+      .initialize(WaitForReadyStates.Waiting);
+  },
+};

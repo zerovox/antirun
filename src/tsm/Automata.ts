@@ -1,8 +1,9 @@
-import { Emitter } from "./Emitter";
+import { TransitionTo } from "./Emitter";
 
-export type AutomataState<D, C, A> = D & {
-  frame: C;
+export type AutomataState<D, C, A> = D & C & {
   actions: A;
+  state: any;
+  frame: any;
 };
 
 export type AutomataSubscription<S extends AutomataState<{}, {}, {}>> = (update: S) => void;
@@ -14,5 +15,5 @@ export interface Automata<S extends AutomataState<{}, {}, {}>> {
 
 export type AutomataCreator<D, CS extends AutomataState<{}, {}, {}>> = (
   data: D,
-  emit: Emitter<D>,
+  transitionTo: TransitionTo<D>,
 ) => Automata<CS>;

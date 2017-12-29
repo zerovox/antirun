@@ -19,8 +19,8 @@ export interface WaitForPlayersOpts {
   onFull: (players: string[]) => void;
 }
 
-// TODO : can we abstract these one-step machines
-export const WaitForPlayersMachine = {
+// TODO : can we abstract these one-step automatas
+export const WaitForPlayersAutomata = {
   create(opts: WaitForPlayersOpts) {
     return new AutomataBuilder({ players: opts.players })
       .withState(WaitForPlayersStates.Waiting, {

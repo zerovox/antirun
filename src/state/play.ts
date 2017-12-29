@@ -25,7 +25,7 @@ export interface PlayOpts {
   onFinish: (tricks: Trick[]) => void;
 }
 
-export const PlayMachine = {
+export const PlayAutomata = {
   create(opts: PlayOpts) {
     return new AutomataBuilder<PlayData>({
       tricks: [],
