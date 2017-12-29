@@ -1,4 +1,4 @@
-import { AutomataBuilder } from "../tsm/AutomataBuilder";
+import { AutomataBuilder } from "../automata/AutomataBuilder";
 import { Card, PlayerMap, Trick } from "../types";
 import { handIsFinished, trickIsFinished } from "../utils/gameUtils";
 import { last } from "../utils/last";
@@ -31,53 +31,59 @@ export const PlayAutomata = {
       tricks: [],
       hands: opts.hands,
     })
-      .withState(PlayStates.Lead, {
-        transitions: {
-          [PlayStates.Follow]: data => last(data.tricks).plays.length === 1,
+      .withStates({
+        Lead: {
+          transitions: {
+            [PlayStates.Follow]: (data: PlayData) => last(data.tricks).plays.length === 1,
+          },
         },
-      })
-      .withState(PlayStates.Follow, {
-        transitions: {
-          [PlayStates.Lead]: data =>
-            trickIsFinished(last(data.tricks).plays) &&
-            !handIsFinished(data.tricks.map(trick => trick.plays)),
+        Follow: {
+          transitions: {
+            [PlayStates.Lead]: (data: PlayData) =>
+              trickIsFinished(last(data.tricks).plays) &&
+              !handIsFinished(data.tricks.map(trick => trick.plays)),
 
-          [PlayStates.Done]: data =>
-            trickIsFinished(last(data.tricks).plays) &&
-            handIsFinished(data.tricks.map(trick => trick.plays)),
+            [PlayStates.Done]: (data: PlayData) =>
+              trickIsFinished(last(data.tricks).plays) &&
+              handIsFinished(data.tricks.map(trick => trick.plays)),
+          },
+        },
+        Done: {
+          onEnter: (data: PlayData) => opts.onFinish(data.tricks),
         },
       })
-      .withState(PlayStates.Done, {
-        onEnter: data => opts.onFinish(data.tricks),
-      })
-      .actions<PlayActions>({
-        lead: (playerName: string, card: Card) => (data: PlayData) => {
+      .withActions({
+        lead: (data: PlayData) => (payload: { playerName: string; card: Card }) => {
           // TODO : check valid lead.
           return {
             tricks: data.tricks.concat([
               {
-                leadBy: playerName,
-                plays: [card],
+                leadBy: payload.playerName,
+                plays: [payload.card],
               },
             ]),
             hands: {
               ...data.hands,
-              [playerName]: data.hands[playerName].filter(playerCard => card !== playerCard),
+              [payload.playerName]: data.hands[payload.playerName].filter(
+                playerCard => payload.card !== playerCard,
+              ),
             },
           };
         },
-        follow: (playerName: string, card: Card) => (data: PlayData) => {
+        follow: (data: PlayData) => (payload: { playerName: string; card: Card }) => {
           // TODO : check valid play.
           return {
             tricks: data.tricks.slice(-1).concat([
               {
                 leadBy: last(data.tricks).leadBy,
-                plays: last(data.tricks).plays.concat([card]),
+                plays: last(data.tricks).plays.concat([payload.card]),
               },
             ]),
             hands: {
               ...data.hands,
-              [playerName]: data.hands[playerName].filter(playerCard => card !== playerCard),
+              [payload.playerName]: data.hands[payload.playerName].filter(
+                playerCard => payload.card !== playerCard,
+              ),
             },
           };
         },

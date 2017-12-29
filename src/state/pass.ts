@@ -1,10 +1,11 @@
-import { AutomataBuilder } from "../tsm/AutomataBuilder";
+import { AutomataBuilder } from "../automata/AutomataBuilder";
 import { Card, PassDirection, PlayerMap } from "../types";
 
 export enum PassStates {
   Passing = "Passing",
   Done = "Done",
 }
+
 export interface Pass {
   one: Card;
   two: Card;
@@ -16,10 +17,10 @@ export interface PassData {
 }
 
 export interface PassActions {
-  pass: (playerName: string, pass: Pass) => void;
+  pass: (payload: { playerName: string; pass: Pass }) => void;
 }
 
-export interface PassAutomataOpts{
+export interface PassAutomataOpts {
   passDirection: PassDirection;
   hands: PlayerMap<Card[]>;
   players: string[];
@@ -28,24 +29,29 @@ export interface PassAutomataOpts{
 
 export const PassAutomata = {
   create(opts: PassAutomataOpts) {
-      return new AutomataBuilder<PassData>({
-          pass: {},
+    return new AutomataBuilder<PassData>({
+      pass: {},
+    })
+      .withStates({
+        Passing: {
+          transitions: {
+            [PassStates.Done]: (data: PassData) => Object.keys(data.pass).length === 4,
+          },
+        },
+        Done: {
+          onEnter: (data: PassData) =>
+            opts.onFinish(applyPasses(opts.hands, data.pass, opts.players, opts.passDirection)),
+        },
       })
-          .withState(PassStates.Passing, {
-              transitions: {
-                  [PassStates.Done]: data => Object.keys(data.pass).length === 4,
-              },
-          })
-          .withState(PassStates.Done, {
-              onEnter: data =>
-                  opts.onFinish(applyPasses(opts.hands, data.pass, opts.players, opts.passDirection)),
-          })
-          .actions<PassActions>({
-              pass: (playerName: string, pass: Pass) => ({ [playerName]: pass }),
-          })
-          .initialize(PassStates.Passing);
-  }
-}
+      .withActions<PassActions>({
+        // TODO : validate passes.
+        pass: () => (payload: { playerName: string; pass: Pass }) => ({
+          [payload.playerName]: payload.pass,
+        }),
+      })
+      .initialize(PassStates.Passing);
+  },
+};
 
 function applyPasses(
   hands: PlayerMap<Card[]>,

@@ -1,4 +1,4 @@
-import { AutomataBuilder } from "../tsm/AutomataBuilder";
+import { AutomataBuilder } from "../automata/AutomataBuilder";
 
 export enum WaitForPlayersStates {
   Waiting = "Waiting",
@@ -10,7 +10,7 @@ export interface WaitForPlayersActions {
   leave: (playerName: string) => void;
 }
 
-export interface WaitForPlayersState {
+export interface WaitForPlayersData {
   players: string[];
 }
 
@@ -23,21 +23,23 @@ export interface WaitForPlayersOpts {
 export const WaitForPlayersAutomata = {
   create(opts: WaitForPlayersOpts) {
     return new AutomataBuilder({ players: opts.players })
-      .withState(WaitForPlayersStates.Waiting, {
-        transitions: {
-          [WaitForPlayersStates.Full]: state => state.players.length === 4,
+      .withStates({
+        Waiting: {
+          transitions: {
+            [WaitForPlayersStates.Full]: (data: WaitForPlayersData) => data.players.length === 4,
+          },
+        },
+        Full: {
+          onEnter: (data: WaitForPlayersData) => opts.onFull(data.players),
         },
       })
-      .withState(WaitForPlayersStates.Full, {
-        onEnter: state => opts.onFull(state.players),
-      })
-      .actions<WaitForPlayersActions>({
-        join: (playerName: string) => (state: WaitForPlayersState) => ({
+      .withActions<WaitForPlayersActions>({
+        join: (state: WaitForPlayersData) => (playerName: string) => ({
           players: state.players.includes(playerName)
             ? state.players
             : state.players.concat([playerName]),
         }),
-        leave: (playerName: string) => (state: WaitForPlayersState) => ({
+        leave: (state: WaitForPlayersData) => (playerName: string) => ({
           players: state.players.filter(player => player !== playerName),
         }),
       })

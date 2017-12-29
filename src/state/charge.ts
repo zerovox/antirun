@@ -1,4 +1,4 @@
-import { AutomataBuilder } from "../tsm/AutomataBuilder";
+import { AutomataBuilder } from "../automata/AutomataBuilder";
 import { Card, PlayerMap } from "../types";
 import { makeObject } from "../utils/makeObject";
 
@@ -9,11 +9,12 @@ export enum ChargeStates {
 
 export interface ChargeData {
   charges: PlayerMap<Card[]>;
-  passes: PlayerMap<boolean>;
+  done: PlayerMap<boolean>;
 }
 
 export interface ChargeActions {
   charge(player: string, card: Card): void;
+
   pass(player: string): void;
 }
 
@@ -27,29 +28,32 @@ export const ChargeAutomata = {
   create(opts: ChargeAutomataOpts) {
     return new AutomataBuilder<ChargeData>({
       charges: makeObject(opts.players, () => []),
-      passes: makeObject(opts.players, () => false),
+      done: makeObject(opts.players, () => false),
     })
-      .withState(ChargeStates.Charging, {
-        transitions: {
-          [ChargeStates.Done]: data =>
-            opts.players.every(player => data.passes[player]) ||
-            opts.players.reduce((count, player) => count + data.charges[player].length, 0) === 4,
+      .withStates({
+        Charging: {
+          transitions: {
+            [ChargeStates.Done]: (data: ChargeData) =>
+              opts.players.every(player => data.done[player]) ||
+              opts.players.reduce((count, player) => count + data.charges[player].length, 0) === 4,
+          },
+        },
+        Done: {
+          onEnter: (data: ChargeData) => opts.onFinish(data.charges),
         },
       })
-      .withState(ChargeStates.Done, {
-        onEnter: data => opts.onFinish(data.charges),
-      })
-      .actions<ChargeActions>({
-        charge: (player: string, card: Card) => (data: ChargeData) => ({
-          passes: makeObject(opts.players, key => key === player),
+      .withActions({
+        // TODO : validate charges
+        charge: (data: ChargeData) => (payload: { player: string; card: Card }) => ({
+          done: makeObject(opts.players, () => false),
           charges: {
             ...data.charges,
-            [player]: data.charges.player.concat([card]),
+            [payload.player]: data.charges.player.concat([payload.card]),
           },
         }),
-        pass: (player: string) => (data: ChargeData) => ({
-          passes: {
-            ...data.passes,
+        pass: (data: ChargeData) => (player: string) => ({
+          done: {
+            ...data.done,
             [player]: true,
           },
         }),

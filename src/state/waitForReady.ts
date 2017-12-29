@@ -1,5 +1,4 @@
-import { Automata, AutomataState } from "../tsm/Automata";
-import { AutomataBuilder } from "../tsm/AutomataBuilder";
+import { AutomataBuilder } from "../automata/AutomataBuilder";
 import { makeObject } from "../utils/makeObject";
 
 export enum WaitForReadyStates {
@@ -29,19 +28,22 @@ export const WaitForReadyAutomata = {
     const readyMap = makeObject(opts.players, () => false);
 
     return new AutomataBuilder(readyMap)
-      .withState(WaitForReadyStates.Waiting, {
-        transitions: {
-          [WaitForReadyStates.Ready]: (state: WaitForReadyData) =>
-            opts.players.every(player => state[player]),
+      .withStates({
+        Waiting: {
+          transitions: {
+            [WaitForReadyStates.Ready]: (state: WaitForReadyData) =>
+              opts.players.every(player => state[player]),
+          },
+        },
+        Ready: {
+          onEnter: () => opts.onAllReady(),
         },
       })
-      .withState(WaitForReadyStates.Ready, {
-        onEnter: () => opts.onAllReady(),
-      })
-      .actions<WaitForReadyActions>({
-        ready: (playerName: string) => ({ [playerName]: true }),
-        unready: (playerName: string) => ({ [playerName]: false }),
-        leave: (playerName: string) => opts.onLeave(playerName),
+      .withActions({
+        ready: () => (playerName: string) => ({ [playerName]: true }),
+        unready: () => (playerName: string) => ({ [playerName]: false }),
+        // TODO : this feels pretty jank / sideeffecty
+        leave: () => (playerName: string) => opts.onLeave(playerName),
       })
       .initialize(WaitForReadyStates.Waiting);
   },
