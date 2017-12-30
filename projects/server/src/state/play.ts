@@ -1,7 +1,5 @@
+import { Card, handIsFinished, last, PlayerMap, Trick, trickIsFinished } from "@tsm/shared";
 import { AutomataBuilder } from "../automata/AutomataBuilder";
-import { Card, PlayerMap, Trick } from "../types";
-import { handIsFinished, trickIsFinished } from "../utils/gameUtils";
-import { last } from "../utils/last";
 
 export enum PlayStates {
   Lead = "Lead",

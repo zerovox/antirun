@@ -1,6 +1,5 @@
+import { Card, makeObject, PlayerMap } from "@tsm/shared";
 import { AutomataBuilder } from "../automata/AutomataBuilder";
-import { Card, PlayerMap } from "../types";
-import { makeObject } from "../utils/makeObject";
 
 export enum ChargeStates {
   Charging = "Charging",

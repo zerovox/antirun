@@ -9,3 +9,4 @@ lib/
 _book
 .cache/
 dist/
+lerna-debug.log

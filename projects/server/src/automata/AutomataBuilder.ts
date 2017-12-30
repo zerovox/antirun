@@ -1,4 +1,4 @@
-import { makeObject } from "../utils/makeObject";
+import { makeObject } from "@tsm/shared";
 import {
   ActionCreatorMap,
   ActionMap,

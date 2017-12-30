@@ -1,5 +1,5 @@
+import { makeObject } from "@tsm/shared";
 import { AutomataBuilder } from "../automata/AutomataBuilder";
-import { makeObject } from "../utils/makeObject";
 
 export enum WaitForReadyStates {
   Waiting = "Waiting",

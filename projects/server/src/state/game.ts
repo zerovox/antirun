@@ -1,7 +1,6 @@
+import { PassDirection, PlayerMap, shuffle } from "@tsm/shared";
 import { AutomataBuilder } from "../automata/AutomataBuilder";
 import { Automata, TransitionTo } from "../automata/types";
-import { PassDirection, PlayerMap } from "../types";
-import { shuffle } from "../utils/shuffle";
 import { HandActions, HandAutomata, HandData } from "./hand";
 import {
   WaitForPlayersActions,

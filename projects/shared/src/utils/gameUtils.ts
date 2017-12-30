@@ -1,7 +1,6 @@
-import { Card, RankString, Suit, Trick } from "../types";
+import { Card, Rank, RankString, Suit, Trick } from "../types";
 import { makeObject } from "./makeObject";
 import { strToRank } from "./rankUtils";
-import { ALL_CARDS } from "../state/cards";
 
 export function isRank(card: Card, rankString: RankString) {
   return card.rank === strToRank(rankString);
@@ -20,7 +19,7 @@ export function trickIsFinished(plays: Card[]) {
 
 export function handIsFinished(plays: Card[][]) {
   const playedCards = plays.reduce((count, trick) => count + trick.length, 0);
-  return playedCards === ALL_CARDS.length;
+  return playedCards === 52;
 }
 
 export function trickWinner(trick: Trick, players: string[]): string {
@@ -28,7 +27,7 @@ export function trickWinner(trick: Trick, players: string[]): string {
   const lead = trick.plays[0];
   const winningRank = trick.plays
     .filter(card => card.suit === lead.suit)
-    .reduce((highRank, card) => Math.max(card.rank, highRank), lead.rank);
+    .reduce((highRank, card) => Math.max(card.rank, highRank) as Rank, lead.rank);
   const winningCardIndex = trick.plays.findIndex(
     card => card.suit === lead.suit && card.rank === winningRank,
   );

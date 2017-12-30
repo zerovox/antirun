@@ -1,5 +1,5 @@
+import { Card, PassDirection, PlayerMap } from "@tsm/shared";
 import { AutomataBuilder } from "../automata/AutomataBuilder";
-import { Card, PassDirection, PlayerMap } from "../types";
 
 export enum PassStates {
   Passing = "Passing",

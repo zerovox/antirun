@@ -1,5 +1,5 @@
+import { Card } from "@tsm/shared";
 import { GameData, GameState, TurboHeartsGameAutomata } from "./state/game";
-import { Card } from "./types";
 
 const activeGames: { [gameId: string]: TurboHeartsGameAutomata } = {};
 
