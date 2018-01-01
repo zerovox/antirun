@@ -9,10 +9,11 @@
     "lint": "tslint --fix 'src/**/*.ts*'"
   },
   "devDependencies": {
-    "typescript": "^2.6.2",
-    "tslint": "^5.8.0"
+    "tslint": "^5.8.0",
+    "typescript": "^2.6.2"
   },
   "dependencies": {
+    "path-to-regexp": "^2.1.0",
     "tslib": "^1.8.1"
   }
 }

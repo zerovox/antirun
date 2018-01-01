@@ -1,73 +1,95 @@
-import { Card } from "@tsm/shared";
-import { GameData, GameState, TurboHeartsGameAutomata } from "./state/game";
+import { ClientEvent, getGameIdFromPathname } from "@tsm/shared";
+import * as express from "express";
+import * as http from "http";
+import * as path from "path";
+import * as WebSocket from "ws";
+import { applyChatEvent, applyGameEvent, getViewForUser, sendEvent } from "./events";
+import { error, gameError, gameLog, info } from "./log";
+import { TurboHeartsGameAutomata } from "./state/game";
 
 const activeGames: { [gameId: string]: TurboHeartsGameAutomata } = {};
+const assetDir = path.join(__dirname, "../../app/dist");
 
-/* if (state.WaitingForPlayers) {
-    actions.join!("Player " + (state.WaitingForPlayers.players.length + 1));
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+app.use(express.static(assetDir));
+app.use("/", (req, res, next) => {
+  // uri has a forward slash followed any number of any characters except full stops (up until the end of the string)
+  if (/\/[^.]*$/.test(req.url)) {
+    res.sendFile(path.join(assetDir, "index.html"));
+  } else {
+    next();
   }
- if (state.WaitingForReady) {
-    const playerReadyState = state.WaitingForReady;
-    const readyPlayerCount = state.players.reduce(
-      (count, name) => count + (playerReadyState[name] ? 1 : 0),
-      0,
-    );
-    actions.ready!(state.players[readyPlayerCount]);
+});
+
+wss.on("connection", (ws: WebSocket, request: http.IncomingMessage) => {
+  const gameId = request.url && getGameIdFromPathname(request.url);
+  if (!gameId) {
+    ws.close();
+    error("ws connection failed: game id not found in " + request.url);
+    return;
   }
- */
 
-type Msg =
-  | { action: "join" }
-  | { action: "leave" }
-  | { action: "ready" }
-  | { action: "pass"; cards: Card[] }
-  | { action: "charge"; card: Card }
-  | { action: "skip-charge" }
-  | { action: "play" }
-  | { action: "chat"; message: string };
+  gameLog(gameId, "ws connect");
 
-type Event =
-  | {
-      name: "state";
-      state: {};
+  const initListener = (event: string) => {
+    const parsedEvent: ClientEvent = JSON.parse(event);
+    if (parsedEvent.name === "init") {
+      ws.removeListener("message", initListener);
+      gameLog(gameId, "user init " + parsedEvent.user);
+      setupGame(ws, gameId, parsedEvent.user);
+    } else {
+      gameError(gameId, "expected to receive init event but received " + parsedEvent.name);
     }
-  | { name: "chat"; message: string };
+  };
 
-function userConnect(
-  user: string,
-  gameId: string,
-  userEvents: (cb: (msg: Msg) => void) => () => void,
-  eventsForUser: (msg: Event) => void,
-) {
+  ws.addListener("message", initListener);
+  ws.addListener("error", err => gameError(gameId, "ws error " + err.message));
+});
+
+function setupGame(ws: WebSocket, gameId: string, user: string) {
+  ws.addListener("message", (event: string) => {
+    const parsedEvent: ClientEvent = JSON.parse(event);
+    if (parsedEvent.name === "message") {
+      applyChatEvent(wss, parsedEvent, user);
+    } else if (parsedEvent.name === "init") {
+      gameError(gameId, "received multiple init events");
+    } else {
+      try {
+        applyGameEvent(game, parsedEvent, user);
+        // TODO : broadcast game event in chat
+      } catch (e) {
+        error(e.message);
+      } finally {
+        sendEvent(ws, { name: "ack", nonce: parsedEvent.nonce });
+      }
+    }
+  });
+
   if (!activeGames[gameId]) {
-    // TODO: generate from database?
     activeGames[gameId] = TurboHeartsGameAutomata.create();
   }
 
   const game = activeGames[gameId];
 
-  userEvents(msg => {
-    switch (msg.action) {
-      case "join":
-        join(game, user);
-        break;
-    }
+  game.subscribe(data => {
+    sendEvent(ws, { name: "state", state: getViewForUser(data, user) });
   });
 
-  game.subscribe(data => eventsForUser({ name: "state", state: getViewForUser(data, user) }));
+  sendEvent(ws, {
+    name: "state",
+    state: getViewForUser(game.getData(), user),
+  });
 
-  eventsForUser({ name: "state", state: getViewForUser(game.getData(), user) });
+  sendEvent(ws, {
+    name: "chat-history",
+    messages: [],
+  });
 }
 
-function getViewForUser(_game: GameData & Partial<GameState>, _player: string) {
-  return {};
-}
-
-function join(game: TurboHeartsGameAutomata, player: string) {
-  const actions = game.getActions();
-  if (actions.join) {
-    actions.join(player);
-  } else {
-    throw new Error("Could not join the game");
-  }
-}
+// start our server
+server.listen(process.env.PORT || 8999, () => {
+  info(`Server started on port ${server.address().port} :)`);
+});

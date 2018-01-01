@@ -1,38 +1,7 @@
-import { Card, Rank, RankString, Suit, Trick } from "../types";
+import { Card, Suit, Trick } from "../cards";
 import { makeObject } from "./makeObject";
-import { strToRank } from "./rankUtils";
-
-export function isRank(card: Card, rankString: RankString) {
-  return card.rank === strToRank(rankString);
-}
-
-export function trickIsFinished(plays: Card[]) {
-  if (plays.length === 0) {
-    return false;
-  }
-  const leadSuit = plays[0].suit;
-  const expectedTrickCount = plays.find(card => card.suit === leadSuit && isRank(card, "9"))
-    ? 8
-    : 4;
-  return expectedTrickCount === plays.length;
-}
-
-export function handIsFinished(plays: Card[][]) {
-  const playedCards = plays.reduce((count, trick) => count + trick.length, 0);
-  return playedCards === 52;
-}
-
-export function trickWinner(trick: Trick, players: string[]): string {
-  const leaderOffset = players.indexOf(trick.leadBy);
-  const lead = trick.plays[0];
-  const winningRank = trick.plays
-    .filter(card => card.suit === lead.suit)
-    .reduce((highRank, card) => Math.max(card.rank, highRank) as Rank, lead.rank);
-  const winningCardIndex = trick.plays.findIndex(
-    card => card.suit === lead.suit && card.rank === winningRank,
-  );
-  return players[(leaderOffset + winningCardIndex) % 4];
-}
+import { isRank } from "./rank";
+import { trickWinner } from "./trick";
 
 export function scoreHand(tricks: Trick[], chargedCards: Card[], players: string[]) {
   return makeObject(players, player => {
@@ -59,7 +28,7 @@ function hasAceOfHearts(cards: Card[]) {
   return cards.findIndex(card => card.suit === Suit.Hearts && isRank(card, "A")) > -1;
 }
 
-export function scoreCards(cards: Card[], chargedCards: Card[]) {
+function scoreCards(cards: Card[], chargedCards: Card[]) {
   const multiplier = hasTenOfClubs(cards) ? (hasTenOfClubs(chargedCards) ? 4 : 2) : 1;
   const heartsWon = cards.filter(card => card.suit === Suit.Hearts).length;
   const heartPoints = hasAceOfHearts(chargedCards) ? 2 * heartsWon : heartsWon;

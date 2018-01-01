@@ -7,10 +7,13 @@ body {
 .turbo {
     display: flex;
     flex-direction: row;
+    min-height: 200px;
 }
 
+.pre-game,
 .game,
 .chat {
+    min-width: 100px;
     margin: 10px;
 }
 

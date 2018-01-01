@@ -48,10 +48,3 @@ export interface Trick {
 export interface PlayerMap<T> {
   [playerName: string]: T;
 }
-
-export enum PassDirection {
-  Left = "Left",
-  Right = "Right",
-  Across = "Across",
-  None = "None",
-}

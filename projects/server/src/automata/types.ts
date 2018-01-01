@@ -20,6 +20,7 @@ export interface StateLifecycle<D> {
 
 export type StateLifecycleCallback<D> = (state: D) => StateLifecycle<D>;
 
+// tslint:disable-next-line
 export interface ActionMap<D> {
   // TODO: I want _any_ object with the correct shaped return value, I dont care about the keys
   // [actionName: string]: (args: {}) => (void | undefined | Partial<D>)

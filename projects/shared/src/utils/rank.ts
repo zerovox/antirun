@@ -1,4 +1,8 @@
-import { Rank, RankString } from "../types";
+import { Card, Rank, RankString } from "../cards";
+
+export function isRank(card: Card, rankString: RankString) {
+  return card.rank === strToRank(rankString);
+}
 
 export function strToRank(name: RankString): Rank {
   switch (name) {

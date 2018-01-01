@@ -1,90 +1,12 @@
 <html>
 <head>
+  <base href="/">
   <link rel="stylesheet" type="text/css" href="themes/base16-harmonic16-light.css">
   <link rel="stylesheet" type="text/css" href="reset.css">
   <link rel="stylesheet" type="text/css" href="index.css">
 </head>
 <body>
-
-<div class="turbo">
-  <div class="game">
-    <table class="trick-table">
-      <thead>
-
-      <tr class="players-row">
-        <td class="player">TS</td>
-        <td class="player">JC</td>
-        <td class="player">DC</td>
-        <td class="player">TW</td>
-      </tr>
-      </thead>
-      <tbody>
-      <tr class="pass-row">
-        <td colspan="4" class="pass">&#8592; Pass Left</td>
-      </tr>
-      <tr class="trick-row -trick-n-2">
-        <td></td>
-        <td></td>
-        <td class="play -clubs">2&#9827;</td>
-        <td class="play -clubs">9&#9827;</td>
-      </tr>
-      <tr class="trick-row -trick-n-2">
-        <td class="play -clubs">10&#9827;</td>
-        <td class="play -clubs">3&#9827;</td>
-        <td class="play -clubs">5&#9827;</td>
-        <td class="play -clubs">5&#9827;</td>
-      </tr>
-      <tr class="trick-row -trick-n-2">
-        <td class="play -clubs">J&#9827;</td>
-        <td class="play -clubs">A&#9827;</td>
-      </tr>
-
-      <tr class="trick-row -trick-n-1">
-        <td></td>
-        <td class="play -spades">4&#9824;</td>
-        <td class="play -spades">7&#9824;</td>
-        <td class="play -spades">J&#9824;</td>
-      </tr>
-      <tr class="trick-row -trick-n-1">
-        <td class="play -spades">A&#9824;</td>
-      </tr>
-
-      <tr class="trick-row -trick-n">
-        <td class="play -diamonds">3&#9830;</td>
-        <td class="play -diamonds">10&#9830;</td>
-        <td></td>
-        <td></td>
-      </tr>
-      </tbody>
-    </table>
-
-    <div class="card-hand">
-      <div class="hand-suit -clubs">
-        &#9827; A K 10
-      </div>
-      <div class="hand-suit -diamonds">
-        &#9830; J 7 6 3
-      </div>
-      <div class="hand-suit -hearts">
-        &hearts; 4 3 2
-      </div>
-      <div class="hand-suit -spades">
-        &#9824; 4 3 2
-      </div>
-    </div>
-  </div>
-  <div class="chat">
-    <div class="chat-history">
-      <div class="chat-row">
-        DC: Table Talk!
-      </div>
-    </div>
-    <div class="chat-input">
-      TS: <input />
-    </div>
-  </div>
-</div>
-
-<script src="./index.ts"/>
+<div id="app"></div>
+<script src="index.tsx"></script>
 </body>
 </html>
