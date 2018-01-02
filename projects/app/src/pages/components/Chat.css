@@ -1,0 +1,18 @@
+
+.chat {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat > .chat-spacer {
+  flex: 1 0 auto;
+}
+
+.chat > .chat-history {
+  flex: 0 1 auto;
+  overflow-y: auto;
+}
+
+.chat > .chat-input {
+  flex: 0 0 auto;
+}

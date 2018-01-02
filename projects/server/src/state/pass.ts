@@ -17,7 +17,7 @@ export interface PassData {
 }
 
 export interface PassActions {
-  pass: (payload: { playerName: string; pass: Pass }) => void;
+  pass: (payload: { player: string; pass: Pass }) => void;
 }
 
 export interface PassAutomataOpts {
@@ -45,8 +45,11 @@ export const PassAutomata = {
       })
       .withActions<PassActions>({
         // TODO : validate passes.
-        pass: () => (payload: { playerName: string; pass: Pass }) => ({
-          [payload.playerName]: payload.pass,
+        pass: (data: PassData) => (payload: { player: string; pass: Pass }) => ({
+          pass: {
+            ...data.pass,
+            [payload.player]: payload.pass,
+          },
         }),
       })
       .initialize(PassStates.Passing);

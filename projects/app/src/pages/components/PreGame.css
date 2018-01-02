@@ -1,0 +1,22 @@
+.pre-game {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  text-align: center;
+
+  & > .heading {
+    margin-bottom: 10px;
+  }
+
+  & > button {
+    margin-top: 10px;
+  }
+
+  & > .player {
+
+    &.-ready {
+      color: var(--base0B);
+    }
+  }
+}

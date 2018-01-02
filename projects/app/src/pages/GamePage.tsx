@@ -1,13 +1,11 @@
-import { assertNever, ChatEntry, GameState, HandState, ServerEvent } from "@tsm/shared";
+import { assertNever, ChatEntry, GameState, ServerEvent } from "@tsm/shared";
 import * as React from "react";
 
+import { Card } from "../../../shared/src/cards";
 import { ClientEvent } from "../../../shared/src/events";
 import { Chat } from "./components/Chat";
 import { Hand } from "./components/Hand";
-import { HandHeadingRow } from "./components/HandHeadingRow";
-import { PlayersRow } from "./components/PlayersRow";
 import { PreGame } from "./components/PreGame";
-import { Tricks } from "./components/Tricks";
 
 export interface GamePageProps {
   gameId: string;
@@ -32,12 +30,13 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
   }
 
   public render() {
+    const { player } = this.props;
     const { gameState, chatEntries } = this.state;
 
     return (
       <div className="turbo">
         {gameState && this.renderGame(gameState)}
-        <Chat chatEntries={chatEntries} />
+        <Chat player={player} chatEntries={chatEntries} onSendMessage={this.handleMessage} />
       </div>
     );
   }
@@ -58,7 +57,14 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
     }
 
     return gameState.game.hands.map((hand, index) => (
-      <GameHand hand={hand} players={gameState.players} handNumber={index} />
+      <Hand
+        hand={hand}
+        players={gameState.players}
+        handNumber={index}
+        onPass={this.handlePass}
+        onPlay={this.handlePlay}
+        onCharge={this.handleCharge}
+      />
     ));
   }
 
@@ -119,34 +125,43 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
     });
   };
 
+  private handlePass = (cards: Card[]) => {
+    this.sendEvent({
+      name: "pass",
+      cards,
+      nonce: createNonce(),
+    });
+  };
+
+  private handlePlay = (card: Card) => {
+    this.sendEvent({
+      name: "play",
+      card,
+      nonce: createNonce(),
+    });
+  };
+
+  private handleCharge = (card: Card) => {
+    this.sendEvent({
+      name: "charge",
+      card,
+      nonce: createNonce(),
+    });
+  };
+
+  private handleMessage = (message: string) => {
+    this.sendEvent({
+      name: "message",
+      message,
+    });
+  };
+
   private sendEvent(gameEvent: ClientEvent) {
     if (this.ws) {
       this.ws.send(JSON.stringify(gameEvent));
       // TODO: nonce.
     }
   }
-}
-
-interface GameHandProps {
-  players: string[];
-  hand: HandState;
-  handNumber: number;
-}
-
-function GameHand({ players, handNumber, hand }: GameHandProps) {
-  return (
-    <div className="game">
-      <table className="trick-table">
-        <thead>
-          <HandHeadingRow handNumber={handNumber} />
-          <PlayersRow players={players} />
-        </thead>
-        <Tricks players={players} tricks={hand.tricks} />
-      </table>
-
-      {Object.keys(hand.hands).map(player => <Hand key={player} hand={hand.hands[player]} />)}
-    </div>
-  );
 }
 
 function createNonce() {

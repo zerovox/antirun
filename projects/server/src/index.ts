@@ -50,6 +50,16 @@ wss.on("connection", (ws: WebSocket, request: http.IncomingMessage) => {
 });
 
 function setupGame(ws: WebSocket, gameId: string, user: string) {
+  if (!activeGames[gameId]) {
+    activeGames[gameId] = TurboHeartsGameAutomata.create();
+  }
+
+  const game = activeGames[gameId];
+
+  const unsub = game.subscribe(data => {
+    sendEvent(ws, { name: "state", state: getViewForUser(data, user) });
+  });
+
   ws.addListener("message", (event: string) => {
     const parsedEvent: ClientEvent = JSON.parse(event);
     if (parsedEvent.name === "message") {
@@ -68,14 +78,8 @@ function setupGame(ws: WebSocket, gameId: string, user: string) {
     }
   });
 
-  if (!activeGames[gameId]) {
-    activeGames[gameId] = TurboHeartsGameAutomata.create();
-  }
-
-  const game = activeGames[gameId];
-
-  game.subscribe(data => {
-    sendEvent(ws, { name: "state", state: getViewForUser(data, user) });
+  ws.addListener("close", () => {
+    unsub();
   });
 
   sendEvent(ws, {

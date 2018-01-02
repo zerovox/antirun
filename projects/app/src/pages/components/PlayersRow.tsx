@@ -1,6 +1,10 @@
 import * as React from "react";
 
-export function PlayersRow(props: { players: string[] }) {
+export interface PlayersRowProps {
+  players: string[];
+}
+
+export function PlayersRow(props: PlayersRowProps) {
   return (
     <tr className="players-row">
       {props.players.map(player => (

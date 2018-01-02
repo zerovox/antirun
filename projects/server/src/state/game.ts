@@ -1,7 +1,7 @@
 import { PassDirection, PlayerMap, shuffle } from "@tsm/shared";
 import { AutomataBuilder } from "../automata/AutomataBuilder";
 import { Automata, TransitionTo } from "../automata/types";
-import { HandActions, HandAutomata, HandData } from "./hand";
+import { HandActions, HandAutomata, HandData, HandState } from "./hand";
 import {
   WaitForPlayersActions,
   WaitForPlayersAutomata,
@@ -27,10 +27,10 @@ export interface GameData {
 export interface GameState {
   WaitingForPlayers: WaitForPlayersData;
   WaitingForReady: WaitForReadyData;
-  PassLeft: HandData;
-  PassRight: HandData;
-  PassAcross: HandData;
-  NoPass: HandData;
+  PassLeft: HandData & Partial<HandState>;
+  PassRight: HandData & Partial<HandState>;
+  PassAcross: HandData & Partial<HandState>;
+  NoPass: HandData & Partial<HandState>;
 }
 
 export type GameActions = WaitForPlayersActions & WaitForReadyActions & HandActions;

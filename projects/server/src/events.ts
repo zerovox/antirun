@@ -1,6 +1,19 @@
-import { ChatEvent, GameEvent, GamePhase, GameState, ServerEvent } from "@tsm/shared";
+import {
+  Card,
+  ChatEvent,
+  GameEvent,
+  GamePhase,
+  GameState,
+  HandPhase,
+  HandState,
+  makeObject,
+  PlayerMap,
+  ServerEvent,
+} from "@tsm/shared";
 import * as WebSocket from "ws";
+import { error } from "./log";
 import { GameData, GameState as InternalGameState, TurboHeartsGameAutomata } from "./state/game";
+import { HandData, HandState as HS } from "./state/hand";
 
 export function applyGameEvent(game: TurboHeartsGameAutomata, event: GameEvent, player: string) {
   switch (event.name) {
@@ -15,6 +28,9 @@ export function applyGameEvent(game: TurboHeartsGameAutomata, event: GameEvent, 
       break;
     case "unready":
       unready(game, player);
+      break;
+    case "pass":
+      pass(game, player, event.cards);
       break;
     default:
       throw new Error("Unknown event: " + event.name);
@@ -46,7 +62,7 @@ export function getViewForUser(
 
 function getGamePhaseViewForUser(
   game: GameData & Partial<InternalGameState>,
-  _player: string,
+  player: string,
 ): GamePhase {
   if (game.WaitingForReady) {
     return {
@@ -63,12 +79,67 @@ function getGamePhaseViewForUser(
 
   return {
     phase: "game",
-    hands: [],
+    hands: [getHandDataViewForUser(game.PassLeft, player) || getHandDataFromScore(game.scores[0])],
+  };
+}
+
+function getHandDataViewForUser(
+  handData: (HandData & Partial<HS>) | undefined,
+  player: string,
+): HandState | undefined {
+  if (!handData) {
+    return undefined;
+  }
+
+  const phase = getHandPhaseForUser(handData);
+
+  return {
+    phase,
+    charges: handData.chargedCards,
+    hands: {
+      [player]: handData.hands[player],
+    },
+    tricks: handData.tricks,
+    score: {},
+  };
+}
+
+function getHandDataFromScore(score: PlayerMap<number>): HandState {
+  return {
+    phase: { phase: "score" },
+    charges: {},
+    hands: {},
+    tricks: [],
+    score,
+  };
+}
+
+function getHandPhaseForUser(handData: HandData & Partial<HS>): HandPhase {
+  const pass = handData.Pass;
+  const charge = handData.Charge;
+  if (pass) {
+    return {
+      phase: "pass",
+      passed: makeObject(Object.keys(pass.pass), player => !!pass.pass[player]),
+    };
+  }
+  if (charge) {
+    return {
+      phase: "charge",
+      ready: charge.done,
+    };
+  }
+  return {
+    phase: "play",
   };
 }
 
 export function sendEvent(ws: WebSocket, object: ServerEvent) {
-  ws.send(JSON.stringify(object));
+  ws.send(JSON.stringify(object), err => {
+    if (err !== undefined) {
+      error("ws error " + err.message);
+    }
+  });
 }
 
 function join(game: TurboHeartsGameAutomata, player: string) {
@@ -104,5 +175,21 @@ function unready(game: TurboHeartsGameAutomata, player: string) {
     actions.unready(player);
   } else {
     throw new Error("Could not unready the game");
+  }
+}
+
+function pass(game: TurboHeartsGameAutomata, player: string, cards: Card[]) {
+  const actions = game.getActions();
+  if (actions.pass) {
+    actions.pass({
+      player,
+      pass: {
+        one: cards[0],
+        two: cards[1],
+        three: cards[2],
+      },
+    });
+  } else {
+    throw new Error("Could not pass the game");
   }
 }

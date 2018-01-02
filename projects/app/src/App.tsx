@@ -1,5 +1,6 @@
-import { getGameIdFromPathname } from "@tsm/shared";
+import { getGameIdFromPathname, getUrlForGameId } from "@tsm/shared";
 import * as Cookies from "js-cookie";
+import * as qs from "qs";
 import * as React from "react";
 import { GamePage } from "./pages/GamePage";
 import { JoinGamePage } from "./pages/JoinGamePage";
@@ -21,7 +22,10 @@ export class App extends React.Component<{}, AppState> {
   }
 
   public render() {
-    if (!this.state.user) {
+    const query = qs.parse(window.location.search.slice(1));
+    const user = query.user || this.state.user;
+
+    if (!user) {
       return <SetUserPage setUser={this.handleSetUser} />;
     }
 
@@ -29,7 +33,19 @@ export class App extends React.Component<{}, AppState> {
       return <JoinGamePage />;
     }
 
-    return <GamePage gameId={this.state.gameId} player={this.state.user} />;
+    if (query.test) {
+      const url = getUrlForGameId(this.state.gameId);
+      return (
+        <div>
+          <iframe className="test-frame" src={url + "?user=TS"} />
+          <iframe className="test-frame" src={url + "?user=DC"} />
+          <iframe className="test-frame" src={url + "?user=TW"} />
+          <iframe className="test-frame" src={url + "?user=JC"} />
+        </div>
+      );
+    }
+
+    return <GamePage gameId={this.state.gameId} player={user} />;
   }
 
   private handleSetUser = (user: string) => {

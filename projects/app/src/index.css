@@ -1,3 +1,8 @@
+@import "./reset.css";
+@import "./themes/base16-harmonic16-light.css";
+@import "./pages/components/Chat.css";
+@import "./pages/components/PreGame.css";
+
 body {
     background: var(--base00);
     color: var(--base06);
@@ -8,6 +13,7 @@ body {
     display: flex;
     flex-direction: row;
     min-height: 200px;
+    max-height: 300px;
 }
 
 .pre-game,
@@ -17,17 +23,11 @@ body {
     margin: 10px;
 }
 
-.chat {
-    display: flex;
-    flex-direction: column;
-}
-
-.chat > .chat-history {
-    flex: 1 1 auto;
-}
-
-.chat > .chat-input {
-    flex: 0 0 auto;
+.test-frame {
+    height: 200px;
+    width: 600px;
+    margin: 10px 10px 0;
+    border: 1px solid var(--base04);
 }
 
 .trick-table .pass {
@@ -70,22 +70,42 @@ body {
     border: 1px solid var(--base03);
 }
 
-.card-hand {
+.player-hand {
     margin-top: 10px;
 }
 
-.-clubs {
+.player-hand > .suit-row {
+    display: flex;
+    align-items: center;
+}
+
+.player-hand > .suit-row > .player-card {
+    padding: 2px 2px;
+    border: 1px solid transparent;
+    user-select: none;
+
+    &.-selected {
+        border: 1px solid var(--base08);
+        border-radius: 2px;
+    }
+}
+.player-hand > .suit-row > .player-card:hover {
+    border: 1px solid var(--base04);
+    border-radius: 2px;
+}
+
+._clubs {
     color: var(--base0B);
 }
 
-.-diamonds {
+._diamonds {
     color: var(--base0C);
 }
 
-.-hearts {
+._hearts {
     color: var(--base0F);
 }
 
-.-spades {
+._spades {
     color: var(--base07);
 }

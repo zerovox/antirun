@@ -1,7 +1,6 @@
 import { makeObject } from "@tsm/shared";
 import {
   ActionCreatorMap,
-  ActionMap,
   Automata,
   AutomataCreator,
   AutomataCreatorMap,
@@ -24,7 +23,7 @@ interface StateCreator<D, C, CA> {
   automataCreator: undefined | AutomataCreator<D, C, CA>;
 }
 
-export class AutomataBuilder<D, C = {}, A extends ActionMap<D> = {}> {
+export class AutomataBuilder<D, C = {}, A = {}> {
   private stateCreator: {
     [name: string]: StateCreator<D, any, any>;
   } = {};
@@ -33,8 +32,8 @@ export class AutomataBuilder<D, C = {}, A extends ActionMap<D> = {}> {
   constructor(private initialData: D) {}
 
   public withStates<S>(statesMap: StateLifecycleMap<D, S>): AutomataBuilder<D, C, A> {
-    Object.keys(statesMap).forEach((stateName: keyof S) => {
-      const lifecycle = statesMap[stateName];
+    Object.keys(statesMap).forEach((stateName: string) => {
+      const lifecycle = statesMap[stateName as keyof S];
       const automataCreator: undefined = undefined;
       if (!lifecycle) {
         this.stateCreator[stateName] = {
@@ -56,8 +55,8 @@ export class AutomataBuilder<D, C = {}, A extends ActionMap<D> = {}> {
   public withNestedStates<NC = {}, NCA = {}>(
     nestedStateMap: AutomataCreatorMap<D, NC, NCA>,
   ): AutomataBuilder<D, C & NC, A & Partial<NCA>> {
-    Object.keys(nestedStateMap).forEach((stateName: keyof (NC | NCA)) => {
-      const nestedAutomata = nestedStateMap[stateName];
+    Object.keys(nestedStateMap).forEach((stateName: string) => {
+      const nestedAutomata = nestedStateMap[stateName as keyof (NC | NCA)];
       const automataCreator =
         typeof nestedAutomata === "function" ? nestedAutomata : () => nestedAutomata;
       this.stateCreator[stateName] = {
@@ -68,7 +67,7 @@ export class AutomataBuilder<D, C = {}, A extends ActionMap<D> = {}> {
     return this as any;
   }
 
-  public withActions<NA extends ActionMap<D>>(
+  public withActions<NA extends {}>(
     actions: ActionCreatorMap<D, NA>,
   ): AutomataBuilder<D, C, A & NA> {
     // TODO : replace with reduxy eventys.
@@ -92,7 +91,7 @@ export class AutomataBuilder<D, C = {}, A extends ActionMap<D> = {}> {
   }
 }
 
-class AutomataImpl<D, A extends ActionMap<D>> implements Automata<D, A> {
+class AutomataImpl<D, A extends {}> implements Automata<D, A> {
   private actions: A;
   private currentState: undefined | CreatedState<D, any, any> = undefined;
   private subscriptions: Array<AutomataSubscription<D, A>> = [];
@@ -104,8 +103,8 @@ class AutomataImpl<D, A extends ActionMap<D>> implements Automata<D, A> {
     },
     actionCreators: ActionCreatorMap<D, A>,
   ) {
-    this.actions = makeObject(Object.keys(actionCreators), (key: keyof A) => (arg: any) => {
-      const updater = actionCreators[key];
+    this.actions = makeObject(Object.keys(actionCreators), (key: string) => (arg: any) => {
+      const updater = actionCreators[key as keyof A];
       const update = updater(this.data)(arg);
       if (!update) {
         return;
@@ -167,7 +166,7 @@ class AutomataImpl<D, A extends ActionMap<D>> implements Automata<D, A> {
     return true;
   }
 
-  private createState(stateName: string): CreatedState<{}, {}, {}> {
+  private createState(stateName: string): CreatedState<D, {}, {}> {
     const stateCreator = this.stateCreators[stateName];
     if (!stateCreator) {
       throw new Error(`No State with name ${stateName} found`);
@@ -212,7 +211,10 @@ class AutomataImpl<D, A extends ActionMap<D>> implements Automata<D, A> {
     return false;
   }
 
-  private transitionTo: TransitionTo<D> = (stateName: string, state: Partial<D>) => {
+  private transitionTo: TransitionTo<D> = (stateName: string, state: Partial<D> | undefined) => {
+    if (!state) {
+      return;
+    }
     if (this.setData(state)) {
       return;
     }

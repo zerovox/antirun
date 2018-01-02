@@ -1,4 +1,4 @@
-import { rankToStr, segment, suitToStr, Trick } from "@tsm/shared";
+import { cardToStr, segment, Trick } from "@tsm/shared";
 import * as React from "react";
 
 export interface TricksProps {
@@ -23,12 +23,7 @@ function renderTrick(players: string[], trick: Trick, trickAge: number): React.R
     cells.push(<td />);
   }
   trick.plays.forEach(play =>
-    cells.push(
-      <td className={"play -" + play.suit.toLowerCase()}>
-        {rankToStr(play.rank)}
-        {suitToStr(play.suit)}
-      </td>,
-    ),
+    cells.push(<td className={"play _" + play.suit.toLowerCase()}>{cardToStr(play)}</td>),
   );
 
   const trickRowClasses = "trick-row -trick-n" + (trickAge > 0 ? "-" + trickAge : "");

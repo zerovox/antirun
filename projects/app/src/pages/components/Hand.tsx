@@ -1,29 +1,77 @@
-import { Card, rankToStr, Suit, suitToStr } from "@tsm/shared";
+import { Card, cardEquals, HandState } from "@tsm/shared";
 import * as React from "react";
 
+import { HandHeadingRow } from "./HandHeadingRow";
+import { PlayerHand } from "./PlayerHand";
+import { PlayersRow } from "./PlayersRow";
+import { Tricks } from "./Tricks";
+
 export interface HandProps {
-  hand: Card[];
+  players: string[];
+  hand: HandState;
+  handNumber: number;
+  onPass: (card: Card[]) => void;
+  onPlay: (card: Card) => void;
+  onCharge: (card: Card) => void;
 }
 
-export function Hand({ hand }: HandProps) {
-  const clubs = hand.filter(card => card.suit === Suit.Clubs);
-  const diamonds = hand.filter(card => card.suit === Suit.Diamonds);
-  const hearts = hand.filter(card => card.suit === Suit.Hearts);
-  const spades = hand.filter(card => card.suit === Suit.Spades);
-  return (
-    <div className="card-hand">
-      <div className="hand-suit -clubs">
-        {suitToStr(Suit.Clubs)} {clubs.map(card => rankToStr(card.rank)).join(" ")}
+export interface HandComponentState {
+  cardsToPass: Card[];
+}
+
+export class Hand extends React.Component<HandProps, HandComponentState> {
+  public state: HandComponentState = {
+    cardsToPass: [],
+  };
+
+  public render() {
+    const { players, handNumber, hand } = this.props;
+
+    return (
+      <div className="game">
+        <table className="trick-table">
+          <thead>
+            <HandHeadingRow handNumber={handNumber} />
+            <PlayersRow players={players} />
+          </thead>
+          <Tricks players={players} tricks={hand.tricks} />
+        </table>
+
+        {Object.keys(hand.hands).map(player => (
+          <PlayerHand
+            key={player}
+            hand={hand.hands[player]}
+            onClick={this.handleCardClick}
+            selectedCards={this.state.cardsToPass}
+          />
+        ))}
+
+        {hand.phase.phase === "pass" && (
+          <button disabled={this.state.cardsToPass.length !== 3} onClick={this.handlePass}>
+            Pass
+          </button>
+        )}
       </div>
-      <div className="hand-suit -diamonds">
-        {suitToStr(Suit.Diamonds)} {diamonds.map(card => rankToStr(card.rank)).join(" ")}
-      </div>
-      <div className="hand-suit -hearts">
-        {suitToStr(Suit.Hearts)} {hearts.map(card => rankToStr(card.rank)).join(" ")}
-      </div>
-      <div className="hand-suit -spades">
-        {suitToStr(Suit.Spades)} {spades.map(card => rankToStr(card.rank)).join(" ")}
-      </div>
-    </div>
-  );
+    );
+  }
+
+  private handleCardClick = (card: Card) => {
+    if (this.props.hand.phase.phase === "pass") {
+      const previousPass = this.state.cardsToPass;
+      this.setState({
+        cardsToPass: previousPass.find(c => cardEquals(card, c))
+          ? previousPass.filter(c => !cardEquals(card, c))
+          : previousPass.concat([card]),
+      });
+    } else if (this.props.hand.phase.phase === "charge") {
+      this.props.onCharge(card);
+    } else if (this.props.hand.phase.phase === "play") {
+      this.props.onPlay(card);
+    }
+  };
+
+  private handlePass = () => {
+    this.props.onPass(this.state.cardsToPass);
+    this.setState({ cardsToPass: [] });
+  };
 }

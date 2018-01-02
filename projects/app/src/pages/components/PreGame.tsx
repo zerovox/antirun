@@ -20,27 +20,29 @@ export function PreGame({
   join,
   leave,
 }: PreGameProps) {
-  if (players.length === 4) {
-    return (
-      <div className="pre-game">
-        Players: {players.join(", ")}
-        {players.includes(player) && readyPlayers[player] ? (
+  return (
+    <div className="pre-game">
+      <div className="heading">{players.length}/4 players</div>
+      <PlayerRow key={0} player={players[0]} readyPlayers={readyPlayers} />
+      <PlayerRow key={1} player={players[1]} readyPlayers={readyPlayers} />
+      <PlayerRow key={2} player={players[2]} readyPlayers={readyPlayers} />
+      <PlayerRow key={3} player={players[3]} readyPlayers={readyPlayers} />
+      {players.length === 4 ? (
+        players.includes(player) && readyPlayers[player] ? (
           <button onClick={unready}>No, wait!</button>
         ) : (
           <button onClick={ready}>Ready?</button>
-        )}
-      </div>
-    );
-  } else {
-    return (
-      <div className="pre-game">
-        Players: {players.join(", ")}
-        {players.includes(player) ? (
-          <button onClick={leave}>Leave</button>
-        ) : (
-          <button onClick={join}>Join</button>
-        )}
-      </div>
-    );
-  }
+        )
+      ) : players.includes(player) ? (
+        <button onClick={leave}>Leave</button>
+      ) : (
+        <button onClick={join}>Join</button>
+      )}
+      {}
+    </div>
+  );
+}
+
+function PlayerRow({ player, readyPlayers }: { player: string; readyPlayers: PlayerMap<boolean> }) {
+  return <div className={readyPlayers[player] ? "player -ready" : "player"}>{player || "..."}</div>;
 }
