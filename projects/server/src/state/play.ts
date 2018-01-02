@@ -1,5 +1,10 @@
-import { Card, handIsFinished, last, PlayerMap, Trick, trickIsFinished } from "@tsm/shared";
+import { cardEquals, Suit, Card, handIsFinished, last,strToRank, PlayerMap, Trick, trickIsFinished } from "@tsm/shared";
 import { AutomataBuilder } from "../automata/AutomataBuilder";
+
+const TWO_OF_CLUBS = {
+    suit: Suit.Clubs,
+    rank: strToRank("2"),
+};
 
 export enum PlayStates {
   Lead = "Lead",
@@ -13,8 +18,8 @@ export interface PlayData {
 }
 
 export interface PlayActions {
-  lead(playerName: string, card: Card): void;
-  follow(playerName: string, card: Card): void;
+  lead(payload: { player: string; card: Card }): void;
+  follow(payload: { player: string; card: Card }): void;
 }
 
 export interface PlayOpts {
@@ -25,9 +30,22 @@ export interface PlayOpts {
 
 export const PlayAutomata = {
   create(opts: PlayOpts) {
+    const firstPlayer = Object.keys(opts.hands).find(
+        player => opts.hands[player].findIndex(card => cardEquals(card, TWO_OF_CLUBS)) !== -1
+    )!;
     return new AutomataBuilder<PlayData>({
-      tricks: [],
-      hands: opts.hands,
+      tricks: [
+          {
+              leadBy: firstPlayer,
+              plays: [TWO_OF_CLUBS],
+          },
+      ],
+      hands: {
+          ...opts.hands,
+          [firstPlayer]: opts.hands[firstPlayer].filter(card =>
+            !cardEquals(card, TWO_OF_CLUBS),
+          ),
+      },
     })
       .withStates({
         Lead: {
@@ -50,25 +68,25 @@ export const PlayAutomata = {
           onEnter: (data: PlayData) => opts.onFinish(data.tricks),
         },
       })
-      .withActions({
-        lead: (data: PlayData) => (payload: { playerName: string; card: Card }) => {
+      .withActions<PlayActions>({
+        lead: (data: PlayData) => (payload: { player: string; card: Card }) => {
           // TODO : check valid lead.
           return {
             tricks: data.tricks.concat([
               {
-                leadBy: payload.playerName,
+                leadBy: payload.player,
                 plays: [payload.card],
               },
             ]),
             hands: {
               ...data.hands,
-              [payload.playerName]: data.hands[payload.playerName].filter(
+              [payload.player]: data.hands[payload.player].filter(
                 playerCard => payload.card !== playerCard,
               ),
             },
           };
         },
-        follow: (data: PlayData) => (payload: { playerName: string; card: Card }) => {
+        follow: (data: PlayData) => (payload: { player: string; card: Card }) => {
           // TODO : check valid play.
           return {
             tricks: data.tricks.slice(-1).concat([
@@ -79,13 +97,13 @@ export const PlayAutomata = {
             ]),
             hands: {
               ...data.hands,
-              [payload.playerName]: data.hands[payload.playerName].filter(
+              [payload.player]: data.hands[payload.player].filter(
                 playerCard => payload.card !== playerCard,
               ),
             },
           };
         },
       })
-      .initialize(PlayStates.Lead);
+      .initialize(PlayStates.Follow);
   },
 };

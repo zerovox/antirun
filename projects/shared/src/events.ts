@@ -26,7 +26,7 @@ export type GameEvent = { nonce: string } & (
   | { name: "pass"; cards: Card[] }
   | { name: "charge"; card: Card }
   | { name: "skip-charge" }
-  | { name: "play" });
+  | { name: "play"; card: Card });
 
 export interface ChatEvent {
   name: "message";

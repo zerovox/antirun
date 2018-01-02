@@ -12,9 +12,9 @@ export interface ChargeData {
 }
 
 export interface ChargeActions {
-  charge(player: string, card: Card): void;
+  charge(payload: { player: string; card: Card }): void;
 
-  pass(player: string): void;
+  skipCharge(player: string): void;
 }
 
 export interface ChargeAutomataOpts {
@@ -41,16 +41,16 @@ export const ChargeAutomata = {
           onEnter: (data: ChargeData) => opts.onFinish(data.charges),
         },
       })
-      .withActions({
+      .withActions<ChargeActions>({
         // TODO : validate charges
         charge: (data: ChargeData) => (payload: { player: string; card: Card }) => ({
           done: makeObject(opts.players, () => false),
           charges: {
             ...data.charges,
-            [payload.player]: data.charges.player.concat([payload.card]),
+            [payload.player]: data.charges[payload.player].concat([payload.card]),
           },
         }),
-        pass: (data: ChargeData) => (player: string) => ({
+        skipCharge: (data: ChargeData) => (player: string) => ({
           done: {
             ...data.done,
             [player]: true,

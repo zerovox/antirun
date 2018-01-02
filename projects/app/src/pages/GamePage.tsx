@@ -59,11 +59,13 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
     return gameState.game.hands.map((hand, index) => (
       <Hand
         hand={hand}
+        player={this.props.player}
         players={gameState.players}
         handNumber={index}
         onPass={this.handlePass}
         onPlay={this.handlePlay}
         onCharge={this.handleCharge}
+        onSkipCharge={this.handleSkipCharge}
       />
     ));
   }
@@ -148,6 +150,13 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
       nonce: createNonce(),
     });
   };
+
+  private handleSkipCharge = () => {
+      this.sendEvent({
+          name: "skip-charge",
+          nonce: createNonce(),
+      });
+  }
 
   private handleMessage = (message: string) => {
     this.sendEvent({

@@ -9,6 +9,7 @@ import {
   makeObject,
   PlayerMap,
   ServerEvent,
+  assertNever,
 } from "@tsm/shared";
 import * as WebSocket from "ws";
 import { error } from "./log";
@@ -32,8 +33,17 @@ export function applyGameEvent(game: TurboHeartsGameAutomata, event: GameEvent, 
     case "pass":
       pass(game, player, event.cards);
       break;
+    case "charge":
+      charge(game, player, event.card);
+      break;
+    case "skip-charge":
+      skipCharge(game, player);
+      break;
+    case "play":
+      play(game, player, event.card);
+      break;
     default:
-      throw new Error("Unknown event: " + event.name);
+      assertNever("Unknown event: ", event);
   }
 }
 
@@ -97,9 +107,13 @@ function getHandDataViewForUser(
     phase,
     charges: handData.chargedCards,
     hands: {
-      [player]: handData.hands[player],
+      [player]: handData.Play
+        ? handData.Play.hands[player]
+        : handData.hands[player],
     },
-    tricks: handData.tricks,
+    tricks: handData.Play
+      ? handData.Play.tricks
+      : handData.tricks,
     score: {},
   };
 }
@@ -192,4 +206,33 @@ function pass(game: TurboHeartsGameAutomata, player: string, cards: Card[]) {
   } else {
     throw new Error("Could not pass the game");
   }
+}
+
+function charge(game: TurboHeartsGameAutomata, player: string, card: Card) {
+    const actions = game.getActions();
+    if (actions.charge) {
+        actions.charge({player, card});
+    } else {
+        throw new Error("Could not unready the game");
+    }
+}
+
+function skipCharge(game: TurboHeartsGameAutomata, player: string) {
+    const actions = game.getActions();
+    if (actions.skipCharge) {
+        actions.skipCharge(player);
+    } else {
+        throw new Error("Could not unready the game");
+    }
+}
+
+function play(game: TurboHeartsGameAutomata, player: string, card: Card) {
+    const actions = game.getActions();
+    if (actions.lead) {
+        actions.lead({player, card});
+    } else if (actions.follow) {
+        actions.follow({player, card});
+    } else {
+        throw new Error("Could not unready the game");
+    }
 }

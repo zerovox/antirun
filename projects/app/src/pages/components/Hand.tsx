@@ -7,12 +7,14 @@ import { PlayersRow } from "./PlayersRow";
 import { Tricks } from "./Tricks";
 
 export interface HandProps {
+    player: string;
   players: string[];
   hand: HandState;
   handNumber: number;
   onPass: (card: Card[]) => void;
   onPlay: (card: Card) => void;
   onCharge: (card: Card) => void;
+  onSkipCharge: () => void;
 }
 
 export interface HandComponentState {
@@ -25,7 +27,7 @@ export class Hand extends React.Component<HandProps, HandComponentState> {
   };
 
   public render() {
-    const { players, handNumber, hand } = this.props;
+    const { player, players, handNumber, hand } = this.props;
 
     return (
       <div className="game">
@@ -51,6 +53,12 @@ export class Hand extends React.Component<HandProps, HandComponentState> {
             Pass
           </button>
         )}
+
+          {hand.phase.phase === "charge" && (
+            <button onClick={this.handleNoCharge} disabled={hand.phase.ready[player]}>
+              No Charge
+            </button>
+          )}
       </div>
     );
   }
@@ -73,5 +81,9 @@ export class Hand extends React.Component<HandProps, HandComponentState> {
   private handlePass = () => {
     this.props.onPass(this.state.cardsToPass);
     this.setState({ cardsToPass: [] });
+  };
+
+  private handleNoCharge = () => {
+    this.props.onSkipCharge();
   };
 }

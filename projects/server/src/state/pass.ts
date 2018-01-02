@@ -1,4 +1,4 @@
-import { Card, PassDirection, PlayerMap } from "@tsm/shared";
+import { Card, PassDirection, PlayerMap, cardEquals } from "@tsm/shared";
 import { AutomataBuilder } from "../automata/AutomataBuilder";
 
 export enum PassStates {
@@ -78,7 +78,7 @@ function applyPasses(
 
 function applyPass(hand: Card[], outgoing: Pass, incoming: Pass): Card[] {
   return hand
-    .filter(card => card !== outgoing.one && card !== outgoing.two && card !== outgoing.three)
+    .filter(card => !cardEquals(card, outgoing.one) && !cardEquals(card, outgoing.two) && !cardEquals(card, outgoing.three))
     .concat([incoming.one, incoming.two, incoming.three]);
 }
 
