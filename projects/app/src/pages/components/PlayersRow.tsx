@@ -2,6 +2,8 @@ import * as React from "react";
 
 export interface PlayersRowProps {
   players: string[];
+  // TODO : ready players
+  // TODO : current players turn
 }
 
 export function PlayersRow(props: PlayersRowProps) {

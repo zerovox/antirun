@@ -1,5 +1,5 @@
 import { Card } from "./cards";
-import { GameState } from "./game";
+import { GameView } from "./game";
 
 export type ChatEntry =
   | {
@@ -39,7 +39,7 @@ export type ServerEvent =
   | { name: "ack"; nonce: string }
   | {
       name: "state";
-      state: GameState;
+      state: GameView;
     }
   | {
       name: "chat-history";

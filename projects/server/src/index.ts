@@ -3,11 +3,11 @@ import * as express from "express";
 import * as http from "http";
 import * as path from "path";
 import * as WebSocket from "ws";
-import { applyChatEvent, applyGameEvent, getViewForUser, sendEvent } from "./events";
+import { applyChatEvent, applyGameEvent, sendEvent } from "./events";
+import { TurboHeartsGame } from "./Game";
 import { error, gameError, gameLog, info } from "./log";
-import { TurboHeartsGameAutomata } from "./state/game";
 
-const activeGames: { [gameId: string]: TurboHeartsGameAutomata } = {};
+const activeGames: { [gameId: string]: TurboHeartsGame } = {};
 const assetDir = path.join(__dirname, "../../app/dist");
 
 const app = express();
@@ -51,13 +51,13 @@ wss.on("connection", (ws: WebSocket, request: http.IncomingMessage) => {
 
 function setupGame(ws: WebSocket, gameId: string, user: string) {
   if (!activeGames[gameId]) {
-    activeGames[gameId] = TurboHeartsGameAutomata.create();
+    activeGames[gameId] = new TurboHeartsGame();
   }
 
   const game = activeGames[gameId];
 
-  const unsub = game.subscribe(data => {
-    sendEvent(ws, { name: "state", state: getViewForUser(data, user) });
+  const unsub = game.subscribe(user, state => {
+    sendEvent(ws, { name: "state", state });
   });
 
   ws.addListener("message", (event: string) => {
@@ -84,7 +84,7 @@ function setupGame(ws: WebSocket, gameId: string, user: string) {
 
   sendEvent(ws, {
     name: "state",
-    state: getViewForUser(game.getData(), user),
+    state: game.getViewForUser(user),
   });
 
   sendEvent(ws, {

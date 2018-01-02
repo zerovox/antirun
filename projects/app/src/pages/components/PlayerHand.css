@@ -1,0 +1,24 @@
+
+.player-hand {
+  margin-top: 10px;
+}
+
+.player-hand > .suit-row {
+  display: flex;
+  align-items: center;
+}
+
+.player-hand > .suit-row > .player-card {
+  padding: 2px 2px;
+  border: 1px solid transparent;
+  user-select: none;
+
+  &.-selected {
+    border: 1px solid var(--base08);
+    border-radius: 2px;
+  }
+}
+.player-hand > .suit-row > .player-card:hover {
+  border: 1px solid var(--base04);
+  border-radius: 2px;
+}

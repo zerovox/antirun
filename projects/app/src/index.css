@@ -2,6 +2,9 @@
 @import "./themes/base16-harmonic16-light.css";
 @import "./pages/components/Chat.css";
 @import "./pages/components/PreGame.css";
+@import "./pages/components/Hand.css";
+@import "./pages/components/PlayerHand.css";
+@import "./pages/components/Tricks.css";
 
 body {
     background: var(--base00);
@@ -20,7 +23,8 @@ body {
 .game,
 .chat {
     min-width: 100px;
-    margin: 10px;
+    padding: 10px;
+    overflow: auto;
 }
 
 .test-frame {
@@ -28,70 +32,6 @@ body {
     width: 600px;
     margin: 10px 10px 0;
     border: 1px solid var(--base04);
-}
-
-.trick-table .pass {
-    text-align: center;
-    padding: 3px;
-}
-
-.trick-table {
-    border-collapse: collapse;
-}
-
-.trick-table .play:empty {
-    border: 0;
-}
-
-.trick-table .play,
-.players-row .player {
-    border: 1px solid var(--base01);
-    padding: 3px;
-    width: 23px;
-    text-align: center;
-}
-
-.trick-row.-trick-n-1 .play:empty {
-    background: transparent;
-    border: 0;
-}
-
-.trick-row.-trick-n-1 .play {
-    background: var(--base01);
-    border: 1px solid var(--base02);
-}
-
-.trick-row.-trick-n-2 .play:empty {
-    background: transparent;
-}
-
-.trick-row.-trick-n-2 .play {
-    background: var(--base02);
-    border: 1px solid var(--base03);
-}
-
-.player-hand {
-    margin-top: 10px;
-}
-
-.player-hand > .suit-row {
-    display: flex;
-    align-items: center;
-}
-
-.player-hand > .suit-row > .player-card {
-    padding: 2px 2px;
-    border: 1px solid transparent;
-    user-select: none;
-
-    &.-selected {
-        border: 1px solid var(--base08);
-        border-radius: 2px;
-    }
-}
-.player-hand > .suit-row > .player-card:hover {
-    border: 1px solid var(--base04);
-    border-radius: 2px;
 }
 
 ._clubs {

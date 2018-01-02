@@ -1,4 +1,4 @@
-import { assertNever, ChatEntry, GameState, ServerEvent } from "@tsm/shared";
+import { assertNever, ChatEntry, GameView, ServerEvent } from "@tsm/shared";
 import * as React from "react";
 
 import { Card } from "../../../shared/src/cards";
@@ -13,13 +13,13 @@ export interface GamePageProps {
 }
 
 export interface GamePageState {
-  gameState: GameState | undefined;
+  gameView: GameView | undefined;
   chatEntries: ChatEntry[];
 }
 
 export class GamePage extends React.Component<GamePageProps, GamePageState> {
   public state: GamePageState = {
-    gameState: undefined,
+    gameView: undefined,
     chatEntries: [],
   };
 
@@ -31,23 +31,23 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
 
   public render() {
     const { player } = this.props;
-    const { gameState, chatEntries } = this.state;
+    const { gameView, chatEntries } = this.state;
 
     return (
       <div className="turbo">
-        {gameState && this.renderGame(gameState)}
+        {gameView && this.renderGame(gameView)}
         <Chat player={player} chatEntries={chatEntries} onSendMessage={this.handleMessage} />
       </div>
     );
   }
 
-  private renderGame(gameState: GameState) {
-    if (gameState.game.phase === "pre-game") {
+  private renderGame(gameView: GameView) {
+    if (gameView.game.phase === "pre-game") {
       return (
         <PreGame
           player={this.props.player}
-          players={gameState.players}
-          readyPlayers={gameState.game.readyPlayers}
+          players={gameView.players}
+          readyPlayers={gameView.game.readyPlayers}
           ready={this.handleReady}
           unready={this.handleUnready}
           join={this.handleJoin}
@@ -56,11 +56,11 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
       );
     }
 
-    return gameState.game.hands.map((hand, index) => (
+    return gameView.game.hands.map((hand, index) => (
       <Hand
         hand={hand}
         player={this.props.player}
-        players={gameState.players}
+        players={gameView.players}
         handNumber={index}
         onPass={this.handlePass}
         onPlay={this.handlePlay}
@@ -80,7 +80,7 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
     this.ws.addEventListener("message", rawEvent => {
       const event: ServerEvent = JSON.parse(rawEvent.data);
       if (event.name === "state") {
-        this.setState({ gameState: event.state });
+        this.setState({ gameView: event.state });
       } else if (event.name === "chat-history") {
         this.setState({ chatEntries: event.messages });
       } else if (event.name === "chat") {
@@ -152,11 +152,11 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
   };
 
   private handleSkipCharge = () => {
-      this.sendEvent({
-          name: "skip-charge",
-          nonce: createNonce(),
-      });
-  }
+    this.sendEvent({
+      name: "skip-charge",
+      nonce: createNonce(),
+    });
+  };
 
   private handleMessage = (message: string) => {
     this.sendEvent({

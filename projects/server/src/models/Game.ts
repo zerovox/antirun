@@ -10,3 +10,5 @@ Hand
     - Has charged cards object
     - Has tricks array
  */
+
+// TODO : persistence

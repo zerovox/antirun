@@ -7,25 +7,26 @@ export enum PassDirection {
   None = "None",
 }
 
-export type HandPhase =
+export type HandViewPhase =
   | { phase: "pass"; passed: PlayerMap<boolean> }
   | { phase: "charge"; ready: PlayerMap<boolean> }
   | { phase: "play" }
   | { phase: "score" };
 
-export interface HandState {
-  phase: HandPhase;
+export interface HandView {
+  phase: "pass" | "charge" | "play" | "score";
+  readyPlayers: PlayerMap<boolean>;
   charges: PlayerMap<Card[]>;
   hands: PlayerMap<Card[]>;
   tricks: Trick[];
   score: PlayerMap<number>;
 }
 
-export type GamePhase =
+export type GameViewPhase =
   | { phase: "pre-game"; readyPlayers: PlayerMap<boolean> }
-  | { phase: "game"; hands: HandState[] };
+  | { phase: "game"; hands: HandView[] };
 
-export interface GameState {
+export interface GameView {
   players: string[];
-  game: GamePhase;
+  game: GameViewPhase;
 }
