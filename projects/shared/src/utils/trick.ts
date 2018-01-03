@@ -1,20 +1,15 @@
 import { Card, Rank, Trick } from "../cards";
 import { isRank } from "./rank";
 
-export function trickIsFinished(plays: Card[]) {
-  if (plays.length === 0) {
+export function trickIsFinished(trick: Trick) {
+  if (trick.plays.length === 0) {
     return false;
   }
-  const leadSuit = plays[0].suit;
-  const expectedTrickCount = plays.find(card => card.suit === leadSuit && isRank(card, "9"))
+  const leadSuit = trick.plays[0].suit;
+  const expectedTrickCount = trick.plays.find(card => card.suit === leadSuit && isRank(card, "9"))
     ? 8
     : 4;
-  return expectedTrickCount === plays.length;
-}
-
-export function handIsFinished(plays: Card[][]) {
-  const playedCards = plays.reduce((count, trick) => count + trick.length, 0);
-  return playedCards === 52;
+  return expectedTrickCount === trick.plays.length;
 }
 
 export function trickWinner(trick: Trick, players: string[]): string {
@@ -27,4 +22,22 @@ export function trickWinner(trick: Trick, players: string[]): string {
     card => card.suit === lead.suit && card.rank === winningRank,
   );
   return players[(leaderOffset + winningCardIndex) % 4];
+}
+
+export function isInSuit(trick: Trick, card: Card) {
+  const lead = trick.plays[0];
+  return card.suit === lead.suit;
+}
+
+export function hasInSuitCard(trick: Trick, hand: Card[]): boolean {
+  const lead = trick.plays[0];
+  return hand.find(card => card.suit === lead.suit) !== undefined;
+}
+
+export function nextPlayerInTrick(trick: Trick, players: string[]): string {
+  if (trickIsFinished(trick)) {
+    return trickWinner(trick, players);
+  }
+  const leaderOffset = players.indexOf(trick.leadBy);
+  return players[(leaderOffset + trick.plays.length) % 4];
 }

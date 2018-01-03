@@ -23,6 +23,7 @@ function renderTrick(players: string[], trick: Trick, trickAge: number): React.R
     cells.push(<td />);
   }
   trick.plays.forEach(play =>
+    // TODO: add "-high-card" class to high card.
     cells.push(<td className={"play _" + play.suit.toLowerCase()}>{cardToStr(play)}</td>),
   );
 

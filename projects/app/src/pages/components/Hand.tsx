@@ -1,9 +1,11 @@
 import { Card, cardEquals, HandView } from "@tsm/shared";
 import * as React from "react";
 
+import { ChargesRow } from "./ChargeRow";
 import { HandHeadingRow } from "./HandHeadingRow";
 import { PlayerHand } from "./PlayerHand";
 import { PlayersRow } from "./PlayersRow";
+import { ScoreRow } from "./ScoreRow";
 import { Tricks } from "./Tricks";
 
 export interface HandProps {
@@ -19,28 +21,36 @@ export interface HandProps {
 
 export interface HandComponentState {
   cardsToPass: Card[];
+  passed: boolean;
 }
 
 export class Hand extends React.Component<HandProps, HandComponentState> {
   public state: HandComponentState = {
     cardsToPass: [],
+    passed: false,
   };
 
   public render() {
     const { player, players, handNumber, hand } = this.props;
-
-    // TODO : charge row.
-    // TODO : hide hand when empty
-    // TODO : score row
-
+    // TODO : if hand.readyPlayers[player] and hand.phase==="pass" then user has passed.
     return (
       <div className="game">
         <table className="trick-table">
           <thead>
             <HandHeadingRow handNumber={handNumber} />
-            <PlayersRow players={players} />
+            <PlayersRow players={players} readyPlayers={hand.readyPlayers} />
+            <ChargesRow players={players} charges={hand.charges} />
+            <tr className="spacer">
+              <td colSpan={4} />
+            </tr>
           </thead>
           <Tricks players={players} tricks={hand.tricks} />
+          <tfoot>
+            <tr className="spacer">
+              <td colSpan={4} />
+            </tr>
+            <ScoreRow players={players} score={hand.score} />
+          </tfoot>
         </table>
 
         <PlayerHand
@@ -50,11 +60,12 @@ export class Hand extends React.Component<HandProps, HandComponentState> {
           selectedCards={this.state.cardsToPass}
         />
 
-        {hand.phase === "pass" && (
-          <button disabled={this.state.cardsToPass.length !== 3} onClick={this.handlePass}>
-            Pass
-          </button>
-        )}
+        {hand.phase === "pass" &&
+          !this.state.passed && (
+            <button disabled={this.state.cardsToPass.length !== 3} onClick={this.handlePass}>
+              Pass
+            </button>
+          )}
 
         {hand.phase === "charge" && (
           <button onClick={this.handleNoCharge} disabled={hand.readyPlayers[player]}>
@@ -66,7 +77,7 @@ export class Hand extends React.Component<HandProps, HandComponentState> {
   }
 
   private handleCardClick = (card: Card) => {
-    if (this.props.hand.phase === "pass") {
+    if (this.props.hand.phase === "pass" && !this.state.passed) {
       const previousPass = this.state.cardsToPass;
       this.setState({
         cardsToPass: previousPass.find(c => cardEquals(card, c))
@@ -82,7 +93,7 @@ export class Hand extends React.Component<HandProps, HandComponentState> {
 
   private handlePass = () => {
     this.props.onPass(this.state.cardsToPass);
-    this.setState({ cardsToPass: [] });
+    this.setState({ passed: true });
   };
 
   private handleNoCharge = () => {

@@ -168,7 +168,7 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
   private sendEvent(gameEvent: ClientEvent) {
     if (this.ws) {
       this.ws.send(JSON.stringify(gameEvent));
-      // TODO: nonce.
+      // TODO: block ui updates til nonce?.
     }
   }
 }

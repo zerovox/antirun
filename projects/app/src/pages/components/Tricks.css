@@ -33,6 +33,11 @@
 .trick-row.-trick-n-8 .play,
 .trick-row.-trick-n-10 .play,
 .trick-row.-trick-n-12 .play {
-  background: var(--base02);
-  border: 1px solid var(--base03);
+  background: var(--base00);
+  border: 1px solid var(--base01);
+}
+
+
+.trick-row.play.-high-card {
+  text-decoration: underline;
 }

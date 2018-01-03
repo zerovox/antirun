@@ -8,10 +8,15 @@ export interface PlayerHandProps {
 }
 
 export function PlayerHand({ hand, onClick, selectedCards }: PlayerHandProps) {
+  if (hand.length === 0) {
+    return null;
+  }
+
   const clubs = hand.filter(card => card.suit === Suit.Clubs);
   const diamonds = hand.filter(card => card.suit === Suit.Diamonds);
   const hearts = hand.filter(card => card.suit === Suit.Hearts);
   const spades = hand.filter(card => card.suit === Suit.Spades);
+
   return (
     <div className="player-hand">
       <div className="suit-row _clubs">

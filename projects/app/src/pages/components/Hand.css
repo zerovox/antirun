@@ -12,9 +12,19 @@
 }
 
 .trick-table .play,
-.players-row .player {
+.players-row .player,
+.charges-row .charge {
   border: 1px solid var(--base01);
   padding: 3px;
   width: 23px;
   text-align: center;
+}
+
+.spacer > td {
+  padding-bottom: 5px;
+  border: 0;
+}
+
+.players-row .player.-ready {
+  color: var(--base0B);
 }

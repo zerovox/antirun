@@ -1,21 +1,31 @@
 import {
+  ALL_CARDS,
   Card,
   cardEquals,
+  CHARGEABLE_CARDS,
   GameView,
   GameViewPhase,
   handIsFinished,
   HandView,
+  hasInSuitCard,
+  heartsAreBroken,
+  isInSuit,
+  isPointCard,
   last,
   makeObject,
+  nextPlayerInTrick,
   PassDirection,
   PlayerMap,
   scoreHand,
   segment,
   shuffle,
+  Suit,
   Trick,
+  trickCountOfSuit,
   trickIsFinished,
+  TWO_OF_CLUBS,
 } from "@tsm/shared";
-import { ALL_CARDS, applyPasses, TWO_OF_CLUBS } from "./cards";
+import { applyPasses } from "./passes";
 
 enum GamePhase {
   WAITING_FOR_PLAYERS = "WAITING_FOR_PLAYERS",
@@ -73,6 +83,7 @@ export class TurboHeartsGame {
       onTransition: () => {
         this.players = shuffle(this.players);
         this.hands.push(createHand(this.players));
+        this.readyPlayers = {};
       },
     },
     {
@@ -127,18 +138,16 @@ export class TurboHeartsGame {
     {
       from: GamePhase.PLAYING,
       to: GamePhase.PASSING,
-      predicate: () =>
-        handIsFinished(this.currentHand.tricks.map(trick => trick.plays)) && this.hands.length < 3,
+      predicate: () => handIsFinished(this.currentHand.tricks) && this.hands.length < 3,
       onTransition: () => {
         this.hands.push(createHand(this.players));
+        this.readyPlayers = {};
       },
     },
     {
       from: GamePhase.PLAYING,
       to: GamePhase.CHARGING,
-      predicate: () =>
-        handIsFinished(this.currentHand.tricks.map(trick => trick.plays)) &&
-        this.hands.length === 3,
+      predicate: () => handIsFinished(this.currentHand.tricks) && this.hands.length === 3,
       onTransition: () => {
         this.hands.push(createHand(this.players));
       },
@@ -146,9 +155,7 @@ export class TurboHeartsGame {
     {
       from: GamePhase.PLAYING,
       to: GamePhase.SCORES,
-      predicate: () =>
-        handIsFinished(this.currentHand.tricks.map(trick => trick.plays)) &&
-        this.hands.length === 4,
+      predicate: () => handIsFinished(this.currentHand.tricks) && this.hands.length === 4,
     },
   ];
 
@@ -181,7 +188,9 @@ export class TurboHeartsGame {
 
   public pass(player: string, cards: Card[]) {
     this.inPhase(GamePhase.PASSING, () => {
-      // TODO : validate pass length
+      if (cards.length !== 3) {
+        throw new Error("Must pass three cards");
+      }
       this.currentHand.passes[player] = cards as [Card, Card, Card];
       this.currentHand.readyPlayers[player] = true;
     });
@@ -189,7 +198,12 @@ export class TurboHeartsGame {
 
   public charge(player: string, card: Card) {
     this.inPhase(GamePhase.CHARGING, () => {
-      // TODO: validate charges
+      if (!this.currentHand.hands[player].find(c => cardEquals(c, card))) {
+        throw new Error("Can only charge cards in players hand");
+      }
+      if (!CHARGEABLE_CARDS.find(c => cardEquals(card, c))) {
+        throw new Error("Can only charge chargable cards");
+      }
       this.currentHand.chargedCards[player].push(card);
       this.currentHand.readyPlayers = makeObject(this.players, () => false);
     });
@@ -203,20 +217,57 @@ export class TurboHeartsGame {
 
   public play(player: string, card: Card) {
     this.inPhase(GamePhase.PLAYING, () => {
-      // TODO : validate play
-      const trick = last(this.currentHand.tricks);
-      if (trickIsFinished(trick.plays)) {
-        this.currentHand.tricks.push({
+      const { tricks, hands, chargedCards } = this.currentHand;
+      const playersHand = hands[player];
+      if (!playersHand.find(c => cardEquals(c, card))) {
+        throw new Error("Can only play cards in players hand");
+      }
+      const trick = last(tricks);
+      if (trick !== undefined) {
+        const nextPlayer = nextPlayerInTrick(trick, this.players);
+        if (nextPlayer !== player) {
+          throw new Error("Can only play in turn, expected player " + nextPlayer);
+        }
+      } else {
+        if (!cardEquals(card, TWO_OF_CLUBS)) {
+          throw new Error("First lead must be two of clubs");
+        }
+      }
+
+      const isChargedCard = chargedCards[player].find(c => cardEquals(c, card)) !== undefined;
+
+      if (trickIsFinished(trick)) {
+        if (
+          card.suit === Suit.Hearts &&
+          !heartsAreBroken(tricks) &&
+          !playersHand.every(c => c.suit === Suit.Hearts)
+        ) {
+          throw new Error("Must not lead hearts until broken, unless forced");
+        }
+        if (isChargedCard && trickCountOfSuit(tricks, card.suit) === 0) {
+          if (playersHand.filter(c => c.suit === card.suit).length !== 1) {
+            throw new Error("Must not play charged card on first trick of suit, unless forced");
+          }
+        }
+        tricks.push({
           leadBy: player,
           plays: [card],
         });
       } else {
+        if (tricks.length === 1 && isPointCard(card) && !playersHand.every(c => isPointCard(c))) {
+          throw new Error("Must not play point card on first trick, unless forced");
+        }
+        if (!isInSuit(trick, card) && hasInSuitCard(trick, playersHand)) {
+          throw new Error("Must follow lead suit if possible");
+        }
+        if (isChargedCard && isInSuit(trick, card) && trickCountOfSuit(tricks, card.suit) === 1) {
+          if (playersHand.filter(c => c.suit === card.suit).length !== 1) {
+            throw new Error("Must not play charged card on first trick of suit, unless forced");
+          }
+        }
         trick.plays.push(card);
       }
-      this.currentHand.hands[player].splice(
-        this.currentHand.hands[player].findIndex(c => cardEquals(c, card)),
-        1,
-      );
+      playersHand.splice(playersHand.findIndex(c => cardEquals(c, card)), 1);
     });
   }
 
@@ -245,7 +296,7 @@ export class TurboHeartsGame {
   }
 
   private inPhase(phase: GamePhase | GamePhase[], act: () => void) {
-    if (Array.isArray(phase) ? phase.includes(this.phase) : this.phase !== phase) {
+    if (Array.isArray(phase) ? !phase.includes(this.phase) : this.phase !== phase) {
       throw new Error(`Expected phase ${phase} but was ${this.phase}`);
     }
     act();
@@ -284,10 +335,9 @@ export class TurboHeartsGame {
       hands: {
         [player]: hand.hands[player],
       },
-      // TODO : limit number of tricks shown.
-      tricks: hand.tricks,
+      tricks: handIsFinished(hand.tricks) ? hand.tricks : hand.tricks.slice(-2),
       charges: hand.chargedCards,
-      score: handIsFinished(hand.tricks.map(trick => trick.plays))
+      score: handIsFinished(hand.tricks)
         ? scoreHand(hand.tricks, combine(hand.chargedCards), this.players)
         : {},
     };
