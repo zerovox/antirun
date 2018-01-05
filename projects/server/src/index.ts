@@ -14,14 +14,13 @@ import { EMPTY_GAME, GameModel } from "./models/Game";
 const assetDir = path.join(__dirname, "../assets");
 const knexConfigPath = path.join(process.cwd(), "knexfile.json");
 
-// TODO : move migrations into TS src.
-// TODO : read knexConfig from JSON file relative to process.cwd.
-
 const rawDbConfig = fs.readFileSync(knexConfigPath).toString("utf8");
 const dbConfig = JSON.parse(rawDbConfig);
 const knex = Knex(process.env.PROD ? dbConfig.production : dbConfig.development);
 
-knex.migrate.latest();
+knex.migrate.latest({
+  directory: path.join(__dirname, "migrations"),
+});
 
 Model.knex(knex);
 const activeGames: { [gameId: string]: TurboHeartsGameEngine } = {};

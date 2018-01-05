@@ -23,7 +23,8 @@
             "base0F": "#bf5656"
           }
         }
-      }
+      },
+      "warnForDuplicates": false
     }
   }
 }

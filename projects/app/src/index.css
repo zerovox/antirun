@@ -1,5 +1,8 @@
-// https://github.com/parcel-bundler/parcel/issues/329
-// Theme currently duplicated in .postcssrc.
+/*
+https://github.com/parcel-bundler/parcel/issues/329
+Theme currently duplicated in .postcssrc.
+*/
+
 @import "./themes/base16-harmonic16-light.css";
 
 @import "./reset.css";
@@ -13,6 +16,16 @@ body {
     background: var(--base00);
     color: var(--base06);
     font-family: monospace;
+}
+
+.bg {
+    white-space: pre;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    opacity: 0.2;
+    user-select: none;
+    margin: 20px;
 }
 
 .turbo {

@@ -1,5 +1,6 @@
+import * as Knex from "knex";
 
-exports.up = function(knex, Promise) {
+exports.up = function(knex: Knex) {
   return knex.schema
       .createTable('Hand', function (table) {
           table.increments('id')
@@ -30,7 +31,7 @@ exports.up = function(knex, Promise) {
       })
 };
 
-exports.down = function(knex, Promise) {
+exports.down = function(knex: Knex) {
     return knex.schema
         .dropTableIfExists('Hand')
         .dropTableIfExists('Game');
