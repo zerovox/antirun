@@ -1,9 +1,9 @@
 import { assertNever, ChatEvent, GameEvent, ServerEvent } from "@tsm/shared";
 import * as WebSocket from "ws";
-import { TurboHeartsGame } from "./Game";
+import { TurboHeartsGameEngine } from "./Game";
 import { error } from "./log";
 
-export function applyGameEvent(game: TurboHeartsGame, event: GameEvent, player: string) {
+export function applyGameEvent(game: TurboHeartsGameEngine, event: GameEvent, player: string) {
   // TODO : game log.
 
   switch (event.name) {

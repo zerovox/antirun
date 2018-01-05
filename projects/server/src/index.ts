@@ -1,13 +1,24 @@
 import { ClientEvent, getGameIdFromPathname } from "@tsm/shared";
 import * as express from "express";
 import * as http from "http";
+import * as Knex from "knex";
 import * as path from "path";
 import * as WebSocket from "ws";
 import { applyChatEvent, applyGameEvent, sendEvent } from "./events";
-import { TurboHeartsGame } from "./Game";
+import { TurboHeartsGameEngine } from "./Game";
 import { error, gameError, gameLog, info } from "./log";
 
-const activeGames: { [gameId: string]: TurboHeartsGame } = {};
+import { Model } from "objection";
+import { EMPTY_GAME, GameModel } from "./models/Game";
+
+// tslint:disable-next-line:no-var-requires
+const knexConfig = require("../knexfile");
+export const knex = Knex(knexConfig.development);
+knex.migrate.latest();
+
+Model.knex(knex);
+
+const activeGames: { [gameId: string]: TurboHeartsGameEngine } = {};
 const assetDir = path.join(__dirname, "../../app/dist");
 
 const app = express();
@@ -25,8 +36,8 @@ app.use("/", (req, res, next) => {
 });
 
 wss.on("connection", (ws: WebSocket, request: http.IncomingMessage) => {
-  const gameId = request.url && getGameIdFromPathname(request.url);
-  if (!gameId) {
+  const gameId = request.url ? getGameIdFromPathname(request.url) : undefined;
+  if (gameId === undefined) {
     ws.close();
     error("ws connection failed: game id not found in " + request.url);
     return;
@@ -49,12 +60,8 @@ wss.on("connection", (ws: WebSocket, request: http.IncomingMessage) => {
   ws.addListener("error", err => gameError(gameId, "ws error " + err.message));
 });
 
-function setupGame(ws: WebSocket, gameId: string, user: string) {
-  if (!activeGames[gameId]) {
-    activeGames[gameId] = new TurboHeartsGame();
-  }
-
-  const game = activeGames[gameId];
+async function setupGame(ws: WebSocket, gameId: number, user: string) {
+  const game = await getGameById(gameId);
 
   const unsub = game.subscribe(user, state => {
     sendEvent(ws, { name: "state", state });
@@ -91,6 +98,23 @@ function setupGame(ws: WebSocket, gameId: string, user: string) {
     name: "chat-history",
     messages: [],
   });
+}
+
+async function getGameById(gameId: number): Promise<TurboHeartsGameEngine> {
+  if (!activeGames[gameId]) {
+    let game = await GameModel.query()
+      .findById(gameId)
+      .eager("hands");
+    if (!game) {
+      game = await GameModel.query().insertAndFetch({
+        id: gameId,
+        ...EMPTY_GAME,
+      });
+    }
+    activeGames[gameId] = new TurboHeartsGameEngine(game);
+  }
+
+  return activeGames[gameId];
 }
 
 // start our server

@@ -1,12 +1,12 @@
-export function gameLog(gameId: string, message: string) {
+export function gameLog(gameId: number, message: string) {
   info(`#${gameId}: ${message}`);
 }
 
-export function gameWarn(gameId: string, message: string) {
+export function gameWarn(gameId: number, message: string) {
   warn(`#${gameId}: ${message}`);
 }
 
-export function gameError(gameId: string, message: string) {
+export function gameError(gameId: number, message: string) {
   error(`#${gameId}: ${message}`);
 }
 

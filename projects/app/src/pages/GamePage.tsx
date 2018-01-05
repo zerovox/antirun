@@ -8,7 +8,7 @@ import { Hand } from "./components/Hand";
 import { PreGame } from "./components/PreGame";
 
 export interface GamePageProps {
-  gameId: string;
+  gameId: number;
   player: string;
 }
 
@@ -70,7 +70,7 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
     ));
   }
 
-  private initializeGame(gameId: string) {
+  private initializeGame(gameId: number) {
     if (this.ws) {
       this.ws.close(1000, "this is a game changer");
     }

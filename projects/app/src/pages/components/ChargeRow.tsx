@@ -7,6 +7,7 @@ export interface ChargesRowProps {
 }
 
 // TODO : text-decoration: strike-through once played.
+// TODO : hide when empty.
 
 export function ChargesRow(props: ChargesRowProps) {
   return (

@@ -10,3 +10,4 @@ _book
 .cache/
 dist/
 lerna-debug.log
+*.sqlite3

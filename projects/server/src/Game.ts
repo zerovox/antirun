@@ -1,5 +1,4 @@
 import {
-  ALL_CARDS,
   Card,
   cardEquals,
   CHARGEABLE_CARDS,
@@ -15,19 +14,18 @@ import {
   makeObject,
   nextPlayerInTrick,
   PassDirection,
-  PlayerMap,
   scoreHand,
-  segment,
   shuffle,
   Suit,
-  Trick,
   trickCountOfSuit,
   trickIsFinished,
   TWO_OF_CLUBS,
 } from "@tsm/shared";
+import { GameModel } from "./models/Game";
+import { HandModel } from "./models/Hand";
 import { applyPasses } from "./passes";
 
-enum GamePhase {
+export enum GamePhase {
   WAITING_FOR_PLAYERS = "WAITING_FOR_PLAYERS",
   WAITING_FOR_READY = "WAITING_FOR_READY",
   PASSING = "PASSING",
@@ -40,56 +38,49 @@ interface Transition {
   from: GamePhase;
   to: GamePhase;
   predicate: () => boolean;
-  onTransition?: () => void;
+  onTransition?: () => void | Promise<{}>;
 }
 
-interface HandState {
-  hands: PlayerMap<Card[]>;
-  passes: PlayerMap<[Card, Card, Card] | undefined>;
-  chargedCards: PlayerMap<Card[]>;
-  readyPlayers: PlayerMap<boolean>;
-  tricks: Trick[];
-}
-
-export class TurboHeartsGame {
-  private phase: GamePhase = GamePhase.WAITING_FOR_PLAYERS;
+export class TurboHeartsGameEngine {
+  private game: GameModel;
   private subscriptions: Array<{ cb: (cb: GameView) => void; user: string }> = [];
 
-  private players: string[] = [];
-  private readyPlayers: PlayerMap<boolean> = {};
-  private hands: HandState[] = [];
-  private get currentHand() {
-    return last(this.hands);
+  private get currentHand(): HandModel {
+    if (!this.game.hands) {
+      throw new Error("Attempted to access hand before hand had been added");
+    }
+    return last(this.game.hands);
   }
 
   private transitions: Transition[] = [
     {
       from: GamePhase.WAITING_FOR_PLAYERS,
       to: GamePhase.WAITING_FOR_READY,
-      predicate: () => this.players.length === 4,
+      predicate: () => this.game.players.length === 4,
     },
     {
       from: GamePhase.WAITING_FOR_READY,
       to: GamePhase.WAITING_FOR_PLAYERS,
-      predicate: () => this.players.length !== 4,
+      predicate: () => this.game.players.length !== 4,
       onTransition: () => {
-        this.readyPlayers = {};
+        this.game.setReadyPlayers({});
       },
     },
     {
       from: GamePhase.WAITING_FOR_READY,
       to: GamePhase.PASSING,
-      predicate: () => this.players.every(player => this.readyPlayers[player]),
+      predicate: () => this.game.players.every(player => this.game.readyPlayers[player]),
       onTransition: () => {
-        this.players = shuffle(this.players);
-        this.hands.push(createHand(this.players));
-        this.readyPlayers = {};
+        this.game.setPlayers(shuffle(this.game.players));
+        this.game.setReadyPlayers({});
+        return this.game.createNewHand();
       },
     },
     {
       from: GamePhase.PASSING,
       to: GamePhase.CHARGING,
-      predicate: () => this.players.every(player => this.currentHand.passes[player] !== undefined),
+      predicate: () =>
+        this.game.players.every(player => this.currentHand.passes[player] !== undefined),
       onTransition: () => {
         const passDirection = ((dir: number) => {
           switch (dir) {
@@ -102,87 +93,98 @@ export class TurboHeartsGame {
             default:
               return PassDirection.None;
           }
-        })(this.hands.length);
+        })(this.game.hands.length);
         const { hands, passes } = this.currentHand;
-        this.currentHand.hands = applyPasses(hands, passes, this.players, passDirection);
-        this.currentHand.readyPlayers = makeObject(this.players, () => false);
+        this.currentHand.setHands(applyPasses(hands, passes, this.game.players, passDirection));
+        this.currentHand.setReadyPlayers(makeObject(this.game.players, () => false));
       },
     },
     {
       from: GamePhase.CHARGING,
       to: GamePhase.PLAYING,
       predicate: () =>
-        this.players.reduce(
+        this.game.players.reduce(
           (count, player) => count + this.currentHand.chargedCards[player].length,
           0,
-        ) === 4 || this.players.every(player => this.currentHand.readyPlayers[player]),
+        ) === 4 || this.game.players.every(player => this.currentHand.readyPlayers[player]),
       onTransition: () => {
         const { hands } = this.currentHand;
-        const firstPlayer = this.players.find(
+        const firstPlayer = this.game.players.find(
           player => hands[player].findIndex(card => cardEquals(card, TWO_OF_CLUBS)) !== -1,
         )!;
 
-        this.currentHand.tricks = [
+        this.currentHand.setTricks([
           {
             leadBy: firstPlayer,
             plays: [TWO_OF_CLUBS],
           },
-        ];
+        ]);
 
-        this.currentHand.hands = {
+        this.currentHand.setHands({
           ...hands,
           [firstPlayer]: hands[firstPlayer].filter(card => !cardEquals(card, TWO_OF_CLUBS)),
-        };
+        });
       },
     },
     {
       from: GamePhase.PLAYING,
       to: GamePhase.PASSING,
-      predicate: () => handIsFinished(this.currentHand.tricks) && this.hands.length < 3,
+      predicate: () => handIsFinished(this.currentHand.tricks) && this.game.hands.length < 3,
       onTransition: () => {
-        this.hands.push(createHand(this.players));
-        this.readyPlayers = {};
+        this.game.setReadyPlayers({});
+        return this.game.createNewHand();
       },
     },
     {
       from: GamePhase.PLAYING,
       to: GamePhase.CHARGING,
-      predicate: () => handIsFinished(this.currentHand.tricks) && this.hands.length === 3,
+      predicate: () => handIsFinished(this.currentHand.tricks) && this.game.hands.length === 3,
       onTransition: () => {
-        this.hands.push(createHand(this.players));
+        this.game.setReadyPlayers({});
+        return this.game.createNewHand();
       },
     },
     {
       from: GamePhase.PLAYING,
       to: GamePhase.SCORES,
-      predicate: () => handIsFinished(this.currentHand.tricks) && this.hands.length === 4,
+      predicate: () => handIsFinished(this.currentHand.tricks) && this.game.hands.length === 4,
     },
   ];
 
+  constructor(game: GameModel) {
+    this.game = game;
+  }
+
   public join(player: string) {
     this.inPhase(GamePhase.WAITING_FOR_PLAYERS, () => {
-      if (this.players.includes(player)) {
+      if (this.game.players.includes(player)) {
         return;
       }
-      this.players.push(player);
+      this.game.setPlayers(this.game.players.concat([player]));
     });
   }
 
   public leave(player: string) {
     this.inPhase([GamePhase.WAITING_FOR_PLAYERS, GamePhase.WAITING_FOR_READY], () => {
-      this.players.splice(this.players.indexOf(player), 1);
+      this.game.setPlayers(this.game.players.filter(p => p !== player));
     });
   }
 
   public ready(player: string) {
     this.inPhase(GamePhase.WAITING_FOR_READY, () => {
-      this.readyPlayers[player] = true;
+      this.game.setReadyPlayers({
+        ...this.game.readyPlayers,
+        [player]: true,
+      });
     });
   }
 
   public unready(player: string) {
     this.inPhase(GamePhase.WAITING_FOR_READY, () => {
-      this.readyPlayers[player] = false;
+      this.game.setReadyPlayers({
+        ...this.game.readyPlayers,
+        [player]: false,
+      });
     });
   }
 
@@ -192,7 +194,10 @@ export class TurboHeartsGame {
         throw new Error("Must pass three cards");
       }
       this.currentHand.passes[player] = cards as [Card, Card, Card];
-      this.currentHand.readyPlayers[player] = true;
+      this.currentHand.setReadyPlayers({
+        ...this.currentHand.readyPlayers,
+        [player]: true,
+      });
     });
   }
 
@@ -204,14 +209,20 @@ export class TurboHeartsGame {
       if (!CHARGEABLE_CARDS.find(c => cardEquals(card, c))) {
         throw new Error("Can only charge chargable cards");
       }
-      this.currentHand.chargedCards[player].push(card);
-      this.currentHand.readyPlayers = makeObject(this.players, () => false);
+      this.currentHand.setChargedCards({
+        ...this.currentHand.chargedCards,
+        [player]: (this.currentHand.chargedCards[player] || []).concat([card]),
+      });
+      this.currentHand.setReadyPlayers(makeObject(this.game.players, () => false));
     });
   }
 
   public skipCharge(player: string) {
     this.inPhase(GamePhase.CHARGING, () => {
-      this.currentHand.readyPlayers[player] = true;
+      this.currentHand.setReadyPlayers({
+        ...this.currentHand.readyPlayers,
+        [player]: true,
+      });
     });
   }
 
@@ -224,7 +235,7 @@ export class TurboHeartsGame {
       }
       const trick = last(tricks);
       if (trick !== undefined) {
-        const nextPlayer = nextPlayerInTrick(trick, this.players);
+        const nextPlayer = nextPlayerInTrick(trick, this.game.players);
         if (nextPlayer !== player) {
           throw new Error("Can only play in turn, expected player " + nextPlayer);
         }
@@ -249,10 +260,13 @@ export class TurboHeartsGame {
             throw new Error("Must not play charged card on first trick of suit, unless forced");
           }
         }
-        tricks.push({
-          leadBy: player,
-          plays: [card],
-        });
+        this.currentHand.setTricks([
+          ...tricks,
+          {
+            leadBy: player,
+            plays: [card],
+          },
+        ]);
       } else {
         if (tricks.length === 1 && isPointCard(card) && !playersHand.every(c => isPointCard(c))) {
           throw new Error("Must not play point card on first trick, unless forced");
@@ -265,9 +279,18 @@ export class TurboHeartsGame {
             throw new Error("Must not play charged card on first trick of suit, unless forced");
           }
         }
-        trick.plays.push(card);
+        this.currentHand.setTricks([
+          ...tricks.slice(0, tricks.length - 1),
+          {
+            leadBy: trick.leadBy,
+            plays: trick.plays.concat([card]),
+          },
+        ]);
       }
-      playersHand.splice(playersHand.findIndex(c => cardEquals(c, card)), 1);
+      this.currentHand.setHands({
+        ...this.currentHand.hands,
+        [player]: playersHand.filter(c => !cardEquals(c, card)),
+      });
     });
   }
 
@@ -282,35 +305,36 @@ export class TurboHeartsGame {
 
   public getViewForUser(user: string) {
     const game: GameViewPhase =
-      this.phase === GamePhase.WAITING_FOR_PLAYERS || this.phase === GamePhase.WAITING_FOR_READY
-        ? { phase: "pre-game", readyPlayers: this.readyPlayers }
+      this.game.phase === GamePhase.WAITING_FOR_PLAYERS ||
+      this.game.phase === GamePhase.WAITING_FOR_READY
+        ? { phase: "pre-game", readyPlayers: this.game.readyPlayers }
         : {
             phase: "game",
-            hands: this.hands.map(hand => this.getPlayerHandView(hand, user)),
+            hands: this.game.hands.map(hand => this.getPlayerHandView(hand, user)),
           };
 
     return {
-      players: this.players,
+      players: this.game.players,
       game,
     };
   }
 
-  private inPhase(phase: GamePhase | GamePhase[], act: () => void) {
-    if (Array.isArray(phase) ? !phase.includes(this.phase) : this.phase !== phase) {
-      throw new Error(`Expected phase ${phase} but was ${this.phase}`);
+  private async inPhase(phase: GamePhase | GamePhase[], act: () => void) {
+    if (Array.isArray(phase) ? !phase.includes(this.game.phase) : this.game.phase !== phase) {
+      throw new Error(`Expected phase ${phase} but was ${this.game.phase}`);
     }
     act();
-    const transition = this.transitions.find(t => t.from === this.phase && t.predicate());
+    const transition = this.transitions.find(t => t.from === this.game.phase && t.predicate());
     if (transition) {
-      this.phase = transition.to;
+      this.game.setPhase(transition.to);
       if (transition.onTransition) {
-        transition.onTransition();
+        await Promise.resolve(transition.onTransition() || {});
       }
     }
     this.subscriptions.forEach(sub => sub.cb(this.getViewForUser(sub.user)));
   }
 
-  private getPlayerHandView(hand: HandState, player: string): HandView {
+  private getPlayerHandView(hand: HandModel, player: string): HandView {
     const handPhase = (phase => {
       if (hand !== this.currentHand) {
         return "score";
@@ -327,7 +351,7 @@ export class TurboHeartsGame {
         default:
           throw new Error("Unexpected game phase " + phase);
       }
-    })(this.phase);
+    })(this.game.phase);
 
     return {
       phase: handPhase,
@@ -338,22 +362,10 @@ export class TurboHeartsGame {
       tricks: handIsFinished(hand.tricks) ? hand.tricks : hand.tricks.slice(-2),
       charges: hand.chargedCards,
       score: handIsFinished(hand.tricks)
-        ? scoreHand(hand.tricks, combine(hand.chargedCards), this.players)
+        ? scoreHand(hand.tricks, combine(hand.chargedCards), this.game.players)
         : {},
     };
   }
-}
-
-function createHand(players: string[]): HandState {
-  const allHands = segment(shuffle(ALL_CARDS), 13);
-
-  return {
-    hands: makeObject(players, (_playerName, index) => allHands[index]),
-    chargedCards: makeObject(players, () => []),
-    tricks: [],
-    passes: makeObject(players, () => undefined),
-    readyPlayers: makeObject(players, () => false),
-  };
 }
 
 function combine<T>(obj: { [key: string]: T[] }) {

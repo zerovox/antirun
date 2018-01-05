@@ -8,7 +8,7 @@ import { SetUserPage } from "./pages/SetUserPage";
 
 export class AppState {
   public user: string | undefined;
-  public gameId: string | undefined;
+  public gameId: number | undefined;
 }
 
 export class App extends React.Component<{}, AppState> {
