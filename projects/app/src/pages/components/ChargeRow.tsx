@@ -1,4 +1,4 @@
-import { Card, cardToStr, PlayerMap } from "@tsm/shared";
+import { Card, cardToStr, PlayerMap } from "@antirun/shared";
 import * as React from "react";
 
 export interface ChargesRowProps {

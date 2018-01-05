@@ -1,4 +1,4 @@
-import { ChatEntry } from "@tsm/shared";
+import { ChatEntry } from "@antirun/shared";
 import * as React from "react";
 
 export interface ChatProps {

@@ -20,7 +20,7 @@ import {
   trickCountOfSuit,
   trickIsFinished,
   TWO_OF_CLUBS,
-} from "@tsm/shared";
+} from "@antirun/shared";
 import { GameModel } from "./models/Game";
 import { HandModel } from "./models/Hand";
 import { applyPasses } from "./passes";

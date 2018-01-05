@@ -1,4 +1,4 @@
-import { PlayerMap } from "@tsm/shared";
+import { PlayerMap } from "@antirun/shared";
 import * as React from "react";
 
 export interface ScoreRowProps {

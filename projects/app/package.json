@@ -1,5 +1,5 @@
 {
-  "name": "@tsm/app",
+  "name": "@antirun/app",
   "version": "1.0.0",
   "license": "MIT",
   "scripts": {
@@ -22,7 +22,7 @@
     "tslint": "^5.8.0"
   },
   "dependencies": {
-    "@tsm/shared": "*",
+    "@antirun/shared": "*",
     "js-cookie": "^2.2.0",
     "qs": "^6.5.1",
     "react": "^16.2.0",

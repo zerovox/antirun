@@ -1,20 +1,18 @@
-import { ClientEvent, getGameIdFromPathname } from "@tsm/shared";
+import { ClientEvent, getGameIdFromPathname } from "@antirun/shared";
 import * as express from "express";
+import * as fs from "fs";
 import * as http from "http";
 import * as Knex from "knex";
+import { Model } from "objection";
 import * as path from "path";
 import * as WebSocket from "ws";
-import * as fs from "fs";
 import { applyChatEvent, applyGameEvent, sendEvent } from "./events";
 import { TurboHeartsGameEngine } from "./Game";
 import { error, gameError, gameLog, info } from "./log";
-import { Model } from "objection";
 import { EMPTY_GAME, GameModel } from "./models/Game";
 
 const assetDir = path.join(__dirname, "../assets");
 const knexConfigPath = path.join(process.cwd(), "knexfile.json");
-
-console.log(assetDir);
 
 // TODO : move migrations into TS src.
 // TODO : read knexConfig from JSON file relative to process.cwd.

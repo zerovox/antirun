@@ -1,4 +1,4 @@
-import { Card, PlayerMap, Trick } from "@tsm/shared";
+import { Card, PlayerMap, Trick } from "@antirun/shared";
 import { Model } from "objection";
 import { join } from "path";
 

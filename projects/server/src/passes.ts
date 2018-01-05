@@ -1,4 +1,4 @@
-import { Card, cardEquals, PassDirection, PlayerMap } from "@tsm/shared";
+import { Card, cardEquals, PassDirection, PlayerMap } from "@antirun/shared";
 
 export function applyPasses(
   hands: PlayerMap<Card[]>,

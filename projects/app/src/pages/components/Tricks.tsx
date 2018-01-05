@@ -1,4 +1,4 @@
-import { cardToStr, segment, Trick } from "@tsm/shared";
+import { cardToStr, segment, Trick } from "@antirun/shared";
 import * as React from "react";
 
 export interface TricksProps {

@@ -1,4 +1,4 @@
-import { ALL_CARDS, makeObject, PlayerMap, segment, shuffle } from "@tsm/shared";
+import { ALL_CARDS, makeObject, PlayerMap, segment, shuffle } from "@antirun/shared";
 import { Model } from "objection";
 import { join } from "path";
 import { GamePhase } from "../Game";

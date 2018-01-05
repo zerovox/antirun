@@ -1,4 +1,4 @@
-import { getGameIdFromPathname, getUrlForGameId } from "@tsm/shared";
+import { getGameIdFromPathname, getUrlForGameId } from "@antirun/shared";
 import * as Cookies from "js-cookie";
 import * as qs from "qs";
 import * as React from "react";

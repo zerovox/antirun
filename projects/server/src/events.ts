@@ -1,4 +1,4 @@
-import { assertNever, ChatEvent, GameEvent, ServerEvent } from "@tsm/shared";
+import { assertNever, ChatEvent, GameEvent, ServerEvent } from "@antirun/shared";
 import * as WebSocket from "ws";
 import { TurboHeartsGameEngine } from "./Game";
 import { error } from "./log";

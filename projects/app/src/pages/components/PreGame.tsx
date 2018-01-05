@@ -1,5 +1,5 @@
+import { PlayerMap } from "@antirun/shared";
 import * as React from "react";
-import { PlayerMap } from "@tsm/shared";
 
 export interface PreGameProps {
   player: string;

@@ -1,4 +1,4 @@
-import { Card, cardEquals, HandView } from "@tsm/shared";
+import { Card, cardEquals, HandView } from "@antirun/shared";
 import * as React from "react";
 
 import { ChargesRow } from "./ChargeRow";

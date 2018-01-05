@@ -1,4 +1,4 @@
-import { Card, cardEquals, cardToStr, rankToStr, Suit, suitToStr } from "@tsm/shared";
+import { Card, cardEquals, cardToStr, rankToStr, Suit, suitToStr } from "@antirun/shared";
 import * as React from "react";
 
 export interface PlayerHandProps {
