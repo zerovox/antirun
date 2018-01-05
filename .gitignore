@@ -11,3 +11,6 @@ _book
 dist/
 lerna-debug.log
 *.sqlite3
+
+projects/server/assets
+projects/server/bin

@@ -4,22 +4,29 @@ import * as http from "http";
 import * as Knex from "knex";
 import * as path from "path";
 import * as WebSocket from "ws";
+import * as fs from "fs";
 import { applyChatEvent, applyGameEvent, sendEvent } from "./events";
 import { TurboHeartsGameEngine } from "./Game";
 import { error, gameError, gameLog, info } from "./log";
-
 import { Model } from "objection";
 import { EMPTY_GAME, GameModel } from "./models/Game";
 
-// tslint:disable-next-line:no-var-requires
-const knexConfig = require("../knexfile");
-export const knex = Knex(knexConfig.development);
+const assetDir = path.join(__dirname, "../assets");
+const knexConfigPath = path.join(process.cwd(), "knexfile.json");
+
+console.log(assetDir);
+
+// TODO : move migrations into TS src.
+// TODO : read knexConfig from JSON file relative to process.cwd.
+
+const rawDbConfig = fs.readFileSync(knexConfigPath).toString("utf8");
+const dbConfig = JSON.parse(rawDbConfig);
+const knex = Knex(process.env.PROD ? dbConfig.production : dbConfig.development);
+
 knex.migrate.latest();
 
 Model.knex(knex);
-
 const activeGames: { [gameId: string]: TurboHeartsGameEngine } = {};
-const assetDir = path.join(__dirname, "../../app/dist");
 
 const app = express();
 const server = http.createServer(app);

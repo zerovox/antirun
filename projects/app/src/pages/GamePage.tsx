@@ -1,8 +1,5 @@
-import { assertNever, ChatEntry, GameView, ServerEvent } from "@tsm/shared";
+import { assertNever, Card, ChatEntry, ClientEvent, GameView, ServerEvent } from "@tsm/shared";
 import * as React from "react";
-
-import { Card } from "../../../shared/src/cards";
-import { ClientEvent } from "../../../shared/src/events";
 import { Chat } from "./components/Chat";
 import { Hand } from "./components/Hand";
 import { PreGame } from "./components/PreGame";

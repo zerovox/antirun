@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PlayerMap } from "../../../../shared/src/cards";
+import { PlayerMap } from "@tsm/shared";
 
 export interface PreGameProps {
   player: string;

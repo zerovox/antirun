@@ -1,5 +1,8 @@
-@import "./reset.css";
+// https://github.com/parcel-bundler/parcel/issues/329
+// Theme currently duplicated in .postcssrc.
 @import "./themes/base16-harmonic16-light.css";
+
+@import "./reset.css";
 @import "./pages/components/Chat.css";
 @import "./pages/components/PreGame.css";
 @import "./pages/components/Hand.css";
