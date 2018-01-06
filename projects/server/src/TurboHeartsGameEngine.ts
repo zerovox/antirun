@@ -2,6 +2,7 @@ import {
   Card,
   cardEquals,
   CHARGEABLE_CARDS,
+  combine,
   GameView,
   GameViewPhase,
   handIsFinished,
@@ -366,8 +367,4 @@ export class TurboHeartsGameEngine {
         : {},
     };
   }
-}
-
-function combine<T>(obj: { [key: string]: T[] }) {
-  return Object.keys(obj).reduce((ts, key) => ts.concat(obj[key]), [] as T[]);
 }

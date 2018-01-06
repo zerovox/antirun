@@ -1,5 +1,6 @@
 export * from "./assertNever";
 export * from "./card";
+export * from "./combine";
 export * from "./hand";
 export * from "./last";
 export * from "./makeObject";

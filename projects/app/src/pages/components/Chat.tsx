@@ -18,25 +18,29 @@ export function Chat({ player, chatEntries, onSendMessage }: ChatProps) {
     }
   };
 
+  const chatHistoryRef = (el: HTMLDivElement) => {
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+  };
+
   return (
     <div className="chat">
-      <div className="chat-spacer" />
-      <div className="chat-history">
-        {chatEntries
-          .map(
-            entry =>
-              entry.type === "message" ? (
-                <div className="chat-row">
-                  {entry.user}: {entry.message}
-                </div>
-              ) : (
-                <div className="event-row">{entry.description}</div>
-              ),
-          )
-          .reverse()}
+      <div ref={chatHistoryRef} className="chat-history">
+        {chatEntries.map(
+          entry =>
+            entry.type === "message" ? (
+              <div className="chat-row">
+                {entry.user}: {entry.message}
+              </div>
+            ) : (
+              <div className="event-row">{entry.description}</div>
+            ),
+        )}
       </div>
       <div className="chat-input">
-        {player}:<input ref={el => (inputEl = el)} onKeyPress={handleKeyPress} />
+        <span className="player-name">{player}:</span>
+        <input ref={el => (inputEl = el)} onKeyPress={handleKeyPress} />
       </div>
     </div>
   );

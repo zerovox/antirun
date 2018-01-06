@@ -23,16 +23,17 @@ body {
     position: fixed;
     bottom: 0;
     right: 0;
+    max-width: 50%;
     opacity: 0.2;
     user-select: none;
     margin: 20px;
+    z-index: -1;
 }
 
 .turbo {
     display: flex;
     flex-direction: row;
     min-height: 200px;
-    max-height: 300px;
 }
 
 .pre-game,

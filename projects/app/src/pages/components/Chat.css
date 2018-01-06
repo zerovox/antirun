@@ -2,17 +2,25 @@
 .chat {
   display: flex;
   flex-direction: column;
-}
-
-.chat > .chat-spacer {
-  flex: 1 0 auto;
+  max-height: 180px;
+  width: 200px;
 }
 
 .chat > .chat-history {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   overflow-y: auto;
 }
 
 .chat > .chat-input {
   flex: 0 0 auto;
+  display: flex;
+  align-items: baseline;
+
+  & > .player-name {
+    flex: 0 0 auto;
+  }
+
+  & > input {
+    flex: 1 1 auto;
+  }
 }

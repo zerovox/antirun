@@ -1,7 +1,7 @@
 import { ALL_CARDS, makeObject, PlayerMap, segment, shuffle } from "@antirun/shared";
 import { Model } from "objection";
 import { join } from "path";
-import { GamePhase } from "../Game";
+import { GamePhase } from "../TurboHeartsGameEngine";
 import { HandModel } from "./Hand";
 
 export class GameModel extends Model {

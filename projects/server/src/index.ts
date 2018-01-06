@@ -6,10 +6,10 @@ import * as Knex from "knex";
 import { Model } from "objection";
 import * as path from "path";
 import * as WebSocket from "ws";
-import { applyChatEvent, applyGameEvent, sendEvent } from "./events";
-import { TurboHeartsGameEngine } from "./Game";
+import { getGameById } from "./activeGames";
+import { applyGameEvent, sendEvent } from "./events";
 import { error, gameError, gameLog, info } from "./log";
-import { EMPTY_GAME, GameModel } from "./models/Game";
+import { GameIdTaggedWebSocket } from "./TurboHeartsEventLog";
 
 const assetDir = path.join(__dirname, "../assets");
 const knexConfigPath = path.join(process.cwd(), "knexfile.json");
@@ -23,7 +23,6 @@ knex.migrate.latest({
 });
 
 Model.knex(knex);
-const activeGames: { [gameId: string]: TurboHeartsGameEngine } = {};
 
 const app = express();
 const server = http.createServer(app);
@@ -46,6 +45,7 @@ wss.on("connection", (ws: WebSocket, request: http.IncomingMessage) => {
     error("ws connection failed: game id not found in " + request.url);
     return;
   }
+  (ws as GameIdTaggedWebSocket).gameId = gameId;
 
   gameLog(gameId, "ws connect");
 
@@ -65,22 +65,21 @@ wss.on("connection", (ws: WebSocket, request: http.IncomingMessage) => {
 });
 
 async function setupGame(ws: WebSocket, gameId: number, user: string) {
-  const game = await getGameById(gameId);
+  const { engine, log } = await getGameById(gameId, wss);
 
-  const unsub = game.subscribe(user, state => {
+  const unsub = engine.subscribe(user, state => {
     sendEvent(ws, { name: "state", state });
   });
 
   ws.addListener("message", (event: string) => {
     const parsedEvent: ClientEvent = JSON.parse(event);
     if (parsedEvent.name === "message") {
-      applyChatEvent(wss, parsedEvent, user);
+      log.sendMessage(parsedEvent.message, user);
     } else if (parsedEvent.name === "init") {
       gameError(gameId, "received multiple init events");
     } else {
       try {
-        applyGameEvent(game, parsedEvent, user);
-        // TODO : broadcast game event in chat
+        applyGameEvent(engine, log, parsedEvent, user);
       } catch (e) {
         error(e.message);
       } finally {
@@ -95,30 +94,13 @@ async function setupGame(ws: WebSocket, gameId: number, user: string) {
 
   sendEvent(ws, {
     name: "state",
-    state: game.getViewForUser(user),
+    state: engine.getViewForUser(user),
   });
 
   sendEvent(ws, {
     name: "chat-history",
-    messages: [],
+    messages: log.getEventLog(),
   });
-}
-
-async function getGameById(gameId: number): Promise<TurboHeartsGameEngine> {
-  if (!activeGames[gameId]) {
-    let game = await GameModel.query()
-      .findById(gameId)
-      .eager("hands");
-    if (!game) {
-      game = await GameModel.query().insertAndFetch({
-        id: gameId,
-        ...EMPTY_GAME,
-      });
-    }
-    activeGames[gameId] = new TurboHeartsGameEngine(game);
-  }
-
-  return activeGames[gameId];
 }
 
 // start our server

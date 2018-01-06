@@ -1,4 +1,4 @@
-import { Card, cardToStr, PlayerMap } from "@antirun/shared";
+import { Card, cardToStr, combine, PlayerMap } from "@antirun/shared";
 import * as React from "react";
 
 export interface ChargesRowProps {
@@ -7,9 +7,11 @@ export interface ChargesRowProps {
 }
 
 // TODO : text-decoration: strike-through once played.
-// TODO : hide when empty.
 
 export function ChargesRow(props: ChargesRowProps) {
+  if (combine(props.charges).length === 0) {
+    return null;
+  }
   return (
     <tr className="charges-row">
       {props.players.map(player => (
