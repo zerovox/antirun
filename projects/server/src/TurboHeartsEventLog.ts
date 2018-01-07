@@ -6,6 +6,8 @@ export interface GameIdTaggedWebSocket extends WebSocket {
   gameId: number;
 }
 
+// TODO : log persistence?
+
 export class TurboHeartsEventLog {
   private gameId: number;
   private messages: ChatEntry[] = [];

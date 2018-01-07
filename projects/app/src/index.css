@@ -24,10 +24,11 @@ body {
     bottom: 0;
     right: 0;
     max-width: 50%;
-    opacity: 0.2;
+    opacity: 0.15;
     user-select: none;
     margin: 20px;
     z-index: -1;
+    font-size: 8px;
 }
 
 .turbo {

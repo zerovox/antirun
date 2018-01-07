@@ -9,6 +9,10 @@
 .chat > .chat-history {
   flex: 1 1 auto;
   overflow-y: auto;
+
+  & > .event-row {
+    color: var(--base05);
+  }
 }
 
 .chat > .chat-input {

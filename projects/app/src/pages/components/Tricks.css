@@ -5,7 +5,7 @@
 .trick-row.-trick-n-9 > .play:empty,
 .trick-row.-trick-n-11 > .play:empty {
   background: transparent;
-  border: 0;
+  border: 0  !important;;
 }
 
 .trick-row.-trick-n-1 > .play,
@@ -15,7 +15,7 @@
 .trick-row.-trick-n-9 > .play,
 .trick-row.-trick-n-11 > .play {
   background: var(--base01);
-  border: 1px solid var(--base02);
+  border: 1px solid var(--base02) !important;
 }
 
 .trick-row.-trick-n-2 > .play:empty,
@@ -25,7 +25,7 @@
 .trick-row.-trick-n-10 > .play:empty,
 .trick-row.-trick-n-12 > .play:empty {
   background: transparent;
-  border: 0;
+  border: 0 !important;;
 }
 
 .trick-row.-trick-n-2 > .play,
@@ -35,7 +35,7 @@
 .trick-row.-trick-n-10 > .play,
 .trick-row.-trick-n-12 > .play {
   background: var(--base00);
-  border: 1px solid var(--base01);
+  border: 1px solid var(--base01) !important;;
 }
 
 .trick-row > .play.-high-card {
