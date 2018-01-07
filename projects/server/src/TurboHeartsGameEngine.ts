@@ -295,6 +295,9 @@ export class TurboHeartsGameEngine {
     });
   }
 
+  // TODO : allow player to claim
+  // TODO : skip remaining tricks if no important cards remain.
+
   public subscribe(user: string, cb: (gameState: GameView) => void): () => void {
     const sub = {
       cb,

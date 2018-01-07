@@ -7,10 +7,6 @@ export interface ScoreRowProps {
 }
 
 export function ScoreRow(props: ScoreRowProps) {
-  if (Object.keys(props.score).length !== 4) {
-    return null;
-  }
-
   // TODO : style
 
   return (

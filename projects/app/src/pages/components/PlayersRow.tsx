@@ -4,7 +4,7 @@ import * as React from "react";
 export interface PlayersRowProps {
   players: string[];
   readyPlayers: PlayerMap<boolean>;
-  // TODO : current players turn
+  currentPlayer: string | undefined;
 }
 
 export function PlayersRow(props: PlayersRowProps) {
@@ -13,6 +13,7 @@ export function PlayersRow(props: PlayersRowProps) {
       {props.players.map(player => (
         <td className={"player" + (props.readyPlayers[player] ? " -ready" : "")} key={player}>
           {player}
+          {player === props.currentPlayer && "*"}
         </td>
       ))}
     </tr>

@@ -1,4 +1,4 @@
-import { cardToStr, segment, Trick } from "@antirun/shared";
+import { cardToStr, segment, Trick, winningCardIndex } from "@antirun/shared";
 import * as React from "react";
 
 export interface TricksProps {
@@ -22,10 +22,12 @@ function renderTrick(players: string[], trick: Trick, trickAge: number): React.R
   for (let i = 0; i < blankCellCount; i++) {
     cells.push(<td />);
   }
-  trick.plays.forEach(play =>
-    // TODO: add "-high-card" class to high card.
-    cells.push(<td className={"play _" + play.suit.toLowerCase()}>{cardToStr(play)}</td>),
-  );
+  const winningIndex = winningCardIndex(trick);
+  trick.plays.forEach((play, index) => {
+    const playClasses =
+      "play _" + play.suit.toLowerCase() + ((index === winningIndex) ? " -high-card" : "");
+    cells.push(<td className={playClasses}>{cardToStr(play)}</td>);
+  });
 
   const trickRowClasses = "trick-row -trick-n" + (trickAge > 0 ? "-" + trickAge : "");
   return React.Children.toArray(

@@ -14,14 +14,17 @@ export function trickIsFinished(trick: Trick) {
 
 export function trickWinner(trick: Trick, players: string[]): string {
   const leaderOffset = players.indexOf(trick.leadBy);
+  return players[(leaderOffset + winningCardIndex(trick)) % 4];
+}
+
+export function winningCardIndex(trick: Trick) {
   const lead = trick.plays[0];
+
   const winningRank = trick.plays
     .filter(card => card.suit === lead.suit)
     .reduce((highRank, card) => Math.max(card.rank, highRank) as Rank, lead.rank);
-  const winningCardIndex = trick.plays.findIndex(
-    card => card.suit === lead.suit && card.rank === winningRank,
-  );
-  return players[(leaderOffset + winningCardIndex) % 4];
+
+  return trick.plays.findIndex(card => card.suit === lead.suit && card.rank === winningRank);
 }
 
 export function isInSuit(trick: Trick, card: Card) {

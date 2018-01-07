@@ -22,6 +22,7 @@ export class App extends React.Component<{}, AppState> {
   }
 
   public render() {
+    // TODO : list current + past games
     const query = qs.parse(window.location.search.slice(1));
     const user = query.user || this.state.user;
 
