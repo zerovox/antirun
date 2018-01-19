@@ -52,6 +52,34 @@ body {
     border: 1px solid var(--base04);
 }
 
+a {
+  color: var(--base0C);
+}
+
+.join-game {
+  margin: 10px;
+  display: flex;
+
+  & .site-header {
+    width: 150px;
+    font-weight: 600;
+  }
+
+  & .site-header,
+  & .game-table {
+    margin: 10px;
+  }
+
+  & .table-header {
+    margin-bottom: 10px;
+  }
+
+  & td {
+    padding: 3px 8px;
+    border: 1px solid var(--base03);
+  }
+}
+
 ._clubs {
     color: var(--base0B);
 }

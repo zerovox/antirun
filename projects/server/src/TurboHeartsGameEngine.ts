@@ -5,6 +5,7 @@ import {
   combine,
   GameView,
   GameViewPhase,
+  getPassDirectionForHandIndex,
   handIsFinished,
   HandView,
   hasInSuitCard,
@@ -14,7 +15,6 @@ import {
   last,
   makeObject,
   nextPlayerInTrick,
-  PassDirection,
   scoreHand,
   shuffle,
   Suit,
@@ -83,18 +83,7 @@ export class TurboHeartsGameEngine {
       predicate: () =>
         this.game.players.every(player => this.currentHand.passes[player] !== undefined),
       onTransition: () => {
-        const passDirection = ((dir: number) => {
-          switch (dir) {
-            case 1:
-              return PassDirection.Left;
-            case 2:
-              return PassDirection.Right;
-            case 3:
-              return PassDirection.Across;
-            default:
-              return PassDirection.None;
-          }
-        })(this.game.hands.length);
+        const passDirection = getPassDirectionForHandIndex(this.game.hands.length);
         const { hands, passes } = this.currentHand;
         this.currentHand.setHands(applyPasses(hands, passes, this.game.players, passDirection));
         this.currentHand.setReadyPlayers(makeObject(this.game.players, () => false));
@@ -307,7 +296,7 @@ export class TurboHeartsGameEngine {
     return () => this.subscriptions.splice(this.subscriptions.indexOf(sub), 1);
   }
 
-  public getViewForUser(user: string) {
+  public getViewForUser(user: string | undefined) {
     const game: GameViewPhase =
       this.game.phase === GamePhase.WAITING_FOR_PLAYERS ||
       this.game.phase === GamePhase.WAITING_FOR_READY
@@ -338,7 +327,7 @@ export class TurboHeartsGameEngine {
     this.subscriptions.forEach(sub => sub.cb(this.getViewForUser(sub.user)));
   }
 
-  private getPlayerHandView(hand: HandModel, player: string): HandView {
+  private getPlayerHandView(hand: HandModel, player: string | undefined): HandView {
     const handPhase = (phase => {
       if (hand !== this.currentHand) {
         return "score";
@@ -360,9 +349,12 @@ export class TurboHeartsGameEngine {
     return {
       phase: handPhase,
       readyPlayers: hand.readyPlayers,
-      hands: {
-        [player]: hand.hands[player],
-      },
+      hands:
+        player !== undefined
+          ? {
+              [player]: hand.hands[player],
+            }
+          : {},
       tricks: handIsFinished(hand.tricks) ? hand.tricks : hand.tricks.slice(-2),
       charges: hand.chargedCards,
       score: handIsFinished(hand.tricks)

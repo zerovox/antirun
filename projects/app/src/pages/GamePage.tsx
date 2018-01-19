@@ -72,7 +72,7 @@ export class GamePage extends React.Component<GamePageProps, GamePageState> {
       this.ws.close(1000, "this is a game changer");
     }
 
-    this.ws = new WebSocket("ws://localhost:8999/game/" + gameId);
+    this.ws = new WebSocket(`ws://${window.location.host}/game/${gameId}`);
 
     this.ws.addEventListener("message", rawEvent => {
       const event: ServerEvent = JSON.parse(rawEvent.data);

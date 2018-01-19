@@ -1,4 +1,4 @@
-import { getGameIdFromPathname, getUrlForGameId } from "@antirun/shared";
+import { GameList, getGameIdFromPathname, getUrlForGameId } from "@antirun/shared";
 import * as Cookies from "js-cookie";
 import * as qs from "qs";
 import * as React from "react";
@@ -6,19 +6,26 @@ import { GamePage } from "./pages/GamePage";
 import { JoinGamePage } from "./pages/JoinGamePage";
 import { SetUserPage } from "./pages/SetUserPage";
 
-export class AppState {
-  public user: string | undefined;
-  public gameId: number | undefined;
+export interface AppState {
+  user: string | undefined;
+  gameId: number | undefined;
+  activeGames: GameList | undefined;
 }
 
 export class App extends React.Component<{}, AppState> {
-  public state = {
+  public state: AppState = {
     user: Cookies.get("user"),
     gameId: getGameIdFromPathname(window.location.pathname),
+    activeGames: undefined,
   };
 
-  public componentWillMount() {
+  public async componentWillMount() {
     // TODO : set up URL listener.
+    if (!this.state.gameId) {
+      const fetchResponse = await fetch(window.location.origin + "/api/games");
+      const activeGames: GameList = await fetchResponse.json();
+      this.setState({ activeGames });
+    }
   }
 
   public render() {
@@ -31,7 +38,10 @@ export class App extends React.Component<{}, AppState> {
     }
 
     if (!this.state.gameId) {
-      return <JoinGamePage />;
+      if (this.state.activeGames !== undefined) {
+        return <JoinGamePage activeGames={this.state.activeGames} />;
+      }
+      return <div className="">Loading games</div>;
     }
 
     if (query.test) {

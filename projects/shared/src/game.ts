@@ -30,3 +30,12 @@ export interface GameView {
   players: string[];
   game: GameViewPhase;
 }
+
+export interface GameList {
+  games: Array<{
+    id: number;
+    phase: "pre-game" | "game" | "post-game";
+    hand: PassDirection;
+    players: string[];
+  }>;
+}
