@@ -37,7 +37,7 @@ export class App extends React.Component<{}, AppState> {
       return <SetUserPage setUser={this.handleSetUser} />;
     }
 
-    if (!this.state.gameId) {
+    if (this.state.gameId === undefined) {
       if (this.state.activeGames !== undefined) {
         return <JoinGamePage activeGames={this.state.activeGames} />;
       }
