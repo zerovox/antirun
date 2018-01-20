@@ -7,7 +7,7 @@ export interface ScoreRowProps {
 }
 
 export function ScoreRow(props: ScoreRowProps) {
-  // TODO : style
+  // TODO : red-green coloring
 
   return (
     <tr className="players-row">

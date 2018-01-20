@@ -20,7 +20,6 @@ export class App extends React.Component<{}, AppState> {
   };
 
   public async componentWillMount() {
-    // TODO : set up URL listener.
     if (!this.state.gameId) {
       const fetchResponse = await fetch(window.location.origin + "/api/games");
       const activeGames: GameList = await fetchResponse.json();
@@ -29,7 +28,6 @@ export class App extends React.Component<{}, AppState> {
   }
 
   public render() {
-    // TODO : list current + past games
     const query = qs.parse(window.location.search.slice(1));
     const user = query.user || this.state.user;
 

@@ -18,7 +18,7 @@ export async function preloadGames(clients: WebSocket.Server) {
     .orderBy("id", "desc")
     .eager("hands");
 
-  info(`Preloaded ${games.length} games`);
+  info(`Pre-loaded ${games.length} games`);
 
   games.forEach(game => {
     activeGames[game.id] = {

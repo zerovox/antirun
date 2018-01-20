@@ -218,7 +218,7 @@ export class TurboHeartsGameEngine {
 
   public play(player: string, card: Card) {
     this.inPhase(GamePhase.PLAYING, () => {
-      const { tricks, hands, chargedCards } = this.currentHand;
+      const { tricks, hands } = this.currentHand;
       const playersHand = hands[player];
       if (!playersHand.find(c => cardEquals(c, card))) {
         throw new Error("Can only play cards in players hand");
@@ -235,7 +235,8 @@ export class TurboHeartsGameEngine {
         }
       }
 
-      const isChargedCard = chargedCards[player].find(c => cardEquals(c, card)) !== undefined;
+      const isChargedCard = this.isCharged(player, card);
+      const onlyCardOfSuit = playersHand.filter(c => c.suit === card.suit).length === 1;
 
       if (trickIsFinished(trick)) {
         if (
@@ -246,7 +247,9 @@ export class TurboHeartsGameEngine {
           throw new Error("Must not lead hearts until broken, unless forced");
         }
         if (isChargedCard && trickCountOfSuit(tricks, card.suit) === 0) {
-          if (playersHand.filter(c => c.suit === card.suit).length !== 1) {
+          const handIsOnlyChargedCards = playersHand.every(c => this.isCharged(player, c));
+          // TODO : is there an order in which you should play charged [JD, AH]?
+          if (!handIsOnlyChargedCards) {
             throw new Error("Must not play charged card on first trick of suit, unless forced");
           }
         }
@@ -265,7 +268,7 @@ export class TurboHeartsGameEngine {
           throw new Error("Must follow lead suit if possible");
         }
         if (isChargedCard && isInSuit(trick, card) && trickCountOfSuit(tricks, card.suit) === 1) {
-          if (playersHand.filter(c => c.suit === card.suit).length !== 1) {
+          if (onlyCardOfSuit) {
             throw new Error("Must not play charged card on first trick of suit, unless forced");
           }
         }
@@ -310,6 +313,10 @@ export class TurboHeartsGameEngine {
       players: this.game.players,
       game,
     };
+  }
+
+  private isCharged(player: string, card: Card) {
+    return this.currentHand.chargedCards[player].find(c => cardEquals(c, card)) !== undefined;
   }
 
   private async inPhase(phase: GamePhase | GamePhase[], act: () => void) {

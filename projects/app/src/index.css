@@ -56,6 +56,10 @@ a {
   color: var(--base0C);
 }
 
+.set-user-page {
+  margin: 10px;
+}
+
 .join-game {
   margin: 10px;
   display: flex;
