@@ -1,9 +1,9 @@
 import { GameList, getPassDirectionForHandIndex, PassDirection } from "@antirun/shared";
 import * as WebSocket from "ws";
+import { info } from "./log";
 import { EMPTY_GAME, GameModel } from "./models/Game";
 import { TurboHeartsEventLog } from "./TurboHeartsEventLog";
 import { TurboHeartsGameEngine } from "./TurboHeartsGameEngine";
-import { info } from "./log";
 
 const activeGames: {
   [gameId: string]: {

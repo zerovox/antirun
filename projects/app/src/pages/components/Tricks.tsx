@@ -25,7 +25,7 @@ function renderTrick(players: string[], trick: Trick, trickAge: number): React.R
   const winningIndex = winningCardIndex(trick);
   trick.plays.forEach((play, index) => {
     const playClasses =
-      "play _" + play.suit.toLowerCase() + ((index === winningIndex) ? " -high-card" : "");
+      "play _" + play.suit.toLowerCase() + (index === winningIndex ? " -high-card" : "");
     cells.push(<td className={playClasses}>{cardToStr(play)}</td>);
   });
 

@@ -5,10 +5,10 @@ import * as http from "http";
 import * as Knex from "knex";
 import { Model } from "objection";
 import * as path from "path";
+import { preloadGames } from "./activeGames";
 import { info } from "./log";
 import { getRouter } from "./restApi";
 import { setUpWebsocketApi } from "./websocketApi";
-import { preloadGames } from "./activeGames";
 
 import * as WebSocket from "ws";
 

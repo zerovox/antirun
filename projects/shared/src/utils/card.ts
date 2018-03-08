@@ -49,6 +49,7 @@ export const POINT_CARDS = [
   { suit: Suit.Hearts, rank: strToRank("4") },
   { suit: Suit.Hearts, rank: strToRank("3") },
   { suit: Suit.Hearts, rank: strToRank("2") },
+  { suit: Suit.Diamonds, rank: strToRank("J") },
 ];
 
 export function isPointCard(card: Card): boolean {
