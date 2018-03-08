@@ -12,6 +12,7 @@ import {
   heartsAreBroken,
   isInSuit,
   isPointCard,
+  JACK_OF_DIAMONDS,
   last,
   makeObject,
   nextPlayerInTrick,
@@ -22,7 +23,6 @@ import {
   trickIsFinished,
   TWO_OF_CLUBS,
 } from "@antirun/shared";
-import { JACK_OF_DIAMONDS } from "../../shared/src/utils/card";
 import { GameModel } from "./models/Game";
 import { HandModel } from "./models/Hand";
 import { applyPasses } from "./passes";
@@ -270,7 +270,7 @@ export class TurboHeartsGameEngine {
             throw new Error("Must not play point card on first trick, unless forced");
           }
           if (
-            !cardEquals(JACK_OF_DIAMONDS) &&
+            !cardEquals(card, JACK_OF_DIAMONDS) &&
             playersHand.find(c => cardEquals(c, JACK_OF_DIAMONDS))
           ) {
             throw new Error(
