@@ -12,6 +12,7 @@ import {
   heartsAreBroken,
   isInSuit,
   isPointCard,
+  JACK_OF_DIAMONDS,
   last,
   makeObject,
   nextPlayerInTrick,
@@ -239,17 +240,19 @@ export class TurboHeartsGameEngine {
       const onlyCardOfSuit = playersHand.filter(c => c.suit === card.suit).length === 1;
 
       if (trickIsFinished(trick)) {
+        const heartsBroken = heartsAreBroken(tricks);
         if (
           card.suit === Suit.Hearts &&
-          !heartsAreBroken(tricks) &&
+          !heartsBroken &&
           !playersHand.every(c => c.suit === Suit.Hearts)
         ) {
           throw new Error("Must not lead hearts until broken, unless forced");
         }
         if (isChargedCard && trickCountOfSuit(tricks, card.suit) === 0) {
-          const handIsOnlyChargedCards = playersHand.every(c => this.isCharged(player, c));
-          // TODO : is there an order in which you should play charged [JD, AH]?
-          if (!handIsOnlyChargedCards) {
+          const allChargedOrUnbrokenHearts = playersHand.every(
+            c => this.isCharged(player, c) || (!heartsBroken && c.suit === Suit.Hearts),
+          );
+          if (!allChargedOrUnbrokenHearts) {
             throw new Error("Must not play charged card on first trick of suit, unless forced");
           }
         }
@@ -261,8 +264,19 @@ export class TurboHeartsGameEngine {
           },
         ]);
       } else {
-        if (tricks.length === 1 && isPointCard(card) && !playersHand.every(c => isPointCard(c))) {
-          throw new Error("Must not play point card on first trick, unless forced");
+        if (tricks.length === 1 && isPointCard(card)) {
+          const allPointCards = playersHand.every(c => isPointCard(c));
+          if (!allPointCards) {
+            throw new Error("Must not play point card on first trick, unless forced");
+          }
+          if (
+            !cardEquals(card, JACK_OF_DIAMONDS) &&
+            playersHand.find(c => cardEquals(c, JACK_OF_DIAMONDS))
+          ) {
+            throw new Error(
+              "Must prefer playing jack of diamonds to other point cards on first trick",
+            );
+          }
         }
         if (!isInSuit(trick, card) && hasInSuitCard(trick, playersHand)) {
           throw new Error("Must follow lead suit if possible");

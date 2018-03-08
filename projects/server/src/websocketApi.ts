@@ -74,5 +74,4 @@ export function setUpWebsocketApi(wss: WebSocket.Server) {
 
     log.sendEvent(`${user} connected`, user);
   }
-
 }
